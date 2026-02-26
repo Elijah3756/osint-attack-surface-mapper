@@ -7,6 +7,10 @@
 
 A red team OSINT tool that maps an organization's social network attack surface through ethical open-source intelligence gathering, scores exposure risk, and generates professional assessment reports.
 
+<p align="center">
+  <img src="docs/diagrams/recon-simulation.svg" alt="Live Recon Simulation" width="100%"/>
+</p>
+
 ## What It Does
 
 This tool automates the OSINT reconnaissance phase of a red team engagement:

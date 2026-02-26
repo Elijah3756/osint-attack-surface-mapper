@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 570" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="aR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#ef4444"/></marker>
+    <marker id="aO" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#f59e0b"/></marker>
+    <marker id="aP" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#8b5cf6"/></marker>
+    <marker id="aG" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#22c55e"/></marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="920" height="570" rx="12" fill="#0a0a14"/>
+
+  <!-- Title bar -->
+  <text x="460" y="28" text-anchor="middle" fill="#22c55e" font-size="20" font-weight="700">LIVE RECON SIMULATION</text>
+  <text x="460" y="46" text-anchor="middle" fill="#555" font-size="12">Target: Acme Corp  |  Domain: acme.com</text>
+
+  <!-- Target badge -->
+  <rect x="385" y="56" width="150" height="30" rx="5" fill="#5c1a1a" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="460" y="76" text-anchor="middle" fill="#ef4444" font-size="14" font-weight="700">ACME CORP</text>
+
+  <!-- ==================== STAGE 1: DISCOVERY ==================== -->
+  <text x="20" y="112" fill="#4a9eed" font-size="11" font-weight="700" letter-spacing="1.5">STAGE 1 — DISCOVERY</text>
+  <rect x="10" y="120" width="210" height="186" rx="6" fill="#1e3a5f" fill-opacity="0.1" stroke="#4a9eed" stroke-width="0.6" stroke-opacity="0.3"/>
+
+  <rect x="22" y="130" width="186" height="24" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.7"/>
+  <text x="115" y="147" text-anchor="middle" fill="#a5d8ff" font-size="11">GitHub: 14 members found</text>
+
+  <rect x="22" y="160" width="186" height="24" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.7"/>
+  <text x="115" y="177" text-anchor="middle" fill="#a5d8ff" font-size="11">Hunter: 23 emails verified</text>
+
+  <rect x="22" y="190" width="186" height="24" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.7"/>
+  <text x="115" y="207" text-anchor="middle" fill="#a5d8ff" font-size="11">Shodan: 8 hosts exposed</text>
+
+  <rect x="22" y="220" width="186" height="24" rx="4" fill="#5c1a1a" stroke="#ef4444" stroke-width="0.7"/>
+  <text x="115" y="237" text-anchor="middle" fill="#ffc9c9" font-size="11">HIBP: 6 breached accounts</text>
+
+  <rect x="22" y="250" width="186" height="24" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.7"/>
+  <text x="115" y="267" text-anchor="middle" fill="#a5d8ff" font-size="11">DNS/CT: 12 subdomains</text>
+
+  <rect x="22" y="280" width="186" height="24" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.7"/>
+  <text x="115" y="297" text-anchor="middle" fill="#a5d8ff" font-size="11">WebScraper: 3 docs parsed</text>
+
+  <!-- ==================== STAGE 2: SOCIAL GRAPH ==================== -->
+  <text x="252" y="112" fill="#8b5cf6" font-size="11" font-weight="700" letter-spacing="1.5">STAGE 2 — SOCIAL GRAPH</text>
+  <rect x="240" y="120" width="280" height="278" rx="6" fill="#2d1b69" fill-opacity="0.08" stroke="#8b5cf6" stroke-width="0.6" stroke-opacity="0.3"/>
+
+  <!-- Graph edges (behind nodes) -->
+  <line x1="380" y1="170" x2="340" y2="218" stroke="#333" stroke-width="1"/>
+  <line x1="380" y1="170" x2="420" y2="218" stroke="#333" stroke-width="1"/>
+  <line x1="380" y1="170" x2="310" y2="268" stroke="#333" stroke-width="0.8"/>
+  <line x1="340" y1="232" x2="420" y2="232" stroke="#333" stroke-width="0.8"/>
+  <line x1="340" y1="238" x2="310" y2="268" stroke="#333" stroke-width="0.8"/>
+  <line x1="340" y1="238" x2="355" y2="308" stroke="#333" stroke-width="0.8"/>
+  <line x1="420" y1="238" x2="440" y2="280" stroke="#333" stroke-width="0.8"/>
+  <line x1="310" y1="282" x2="290" y2="322" stroke="#333" stroke-width="0.7"/>
+  <line x1="310" y1="282" x2="355" y2="308" stroke="#333" stroke-width="0.7"/>
+  <line x1="440" y1="294" x2="420" y2="336" stroke="#333" stroke-width="0.7"/>
+  <line x1="355" y1="322" x2="420" y2="336" stroke="#333" stroke-width="0.7"/>
+
+  <!-- CTO node (largest, critical) -->
+  <ellipse cx="380" cy="158" rx="55" ry="18" fill="#5c1a1a" stroke="#ef4444" stroke-width="2"/>
+  <text x="380" y="163" text-anchor="middle" fill="#e5e5e5" font-size="13" font-weight="700">CTO</text>
+  <text x="440" y="155" fill="#ef4444" font-size="11" font-weight="600">0.92</text>
+
+  <!-- Dev Lead node -->
+  <ellipse cx="340" cy="228" rx="48" ry="14" fill="#5c3d1a" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="340" y="233" text-anchor="middle" fill="#e5e5e5" font-size="11">Dev Lead</text>
+  <text x="392" y="225" fill="#f59e0b" font-size="10">0.71</text>
+
+  <!-- SRE node -->
+  <ellipse cx="420" cy="228" rx="38" ry="14" fill="#5c3d1a" stroke="#f59e0b" stroke-width="1"/>
+  <text x="420" y="233" text-anchor="middle" fill="#e5e5e5" font-size="11">SRE</text>
+  <text x="462" y="225" fill="#f59e0b" font-size="10">0.45</text>
+
+  <!-- Jr Dev node -->
+  <ellipse cx="310" cy="275" rx="42" ry="13" fill="#1a4d2e" stroke="#22c55e" stroke-width="1"/>
+  <text x="310" y="280" text-anchor="middle" fill="#b2f2bb" font-size="10">Jr Dev</text>
+
+  <!-- DevOps node -->
+  <ellipse cx="355" cy="315" rx="42" ry="13" fill="#1a4d2e" stroke="#22c55e" stroke-width="1"/>
+  <text x="355" y="320" text-anchor="middle" fill="#b2f2bb" font-size="10">DevOps</text>
+
+  <!-- Analyst node -->
+  <ellipse cx="440" cy="287" rx="40" ry="13" fill="#1a4d2e" stroke="#22c55e" stroke-width="1"/>
+  <text x="440" y="292" text-anchor="middle" fill="#b2f2bb" font-size="10">Analyst</text>
+
+  <!-- Intern node -->
+  <ellipse cx="290" cy="330" rx="36" ry="12" fill="#1a4d4d" stroke="#06b6d4" stroke-width="0.8"/>
+  <text x="290" y="335" text-anchor="middle" fill="#a0a0a0" font-size="9">Intern</text>
+
+  <!-- PM node -->
+  <ellipse cx="420" cy="345" rx="38" ry="12" fill="#1a4d4d" stroke="#06b6d4" stroke-width="0.8"/>
+  <text x="420" y="350" text-anchor="middle" fill="#a0a0a0" font-size="9">PM</text>
+
+  <text x="258" y="380" fill="#555" font-size="10">Centrality + PageRank + Betweenness</text>
+
+  <!-- ==================== STAGE 3: EXPOSURE SCAN ==================== -->
+  <text x="552" y="112" fill="#ef4444" font-size="11" font-weight="700" letter-spacing="1.5">STAGE 3 — EXPOSURE SCAN</text>
+  <rect x="540" y="120" width="270" height="278" rx="6" fill="#5c1a1a" fill-opacity="0.06" stroke="#ef4444" stroke-width="0.6" stroke-opacity="0.3"/>
+
+  <!-- Arrow from graph to findings -->
+  <line x1="520" y1="200" x2="545" y2="200" stroke="#ef4444" stroke-width="2" marker-end="url(#aR)"/>
+
+  <rect x="554" y="132" width="242" height="24" rx="4" fill="#5c1a1a" stroke="#ef4444" stroke-width="0.7"/>
+  <text x="675" y="149" text-anchor="middle" fill="#ffc9c9" font-size="10">CTO: 3 breaches (LinkedIn, Adobe, Dropbox)</text>
+
+  <rect x="554" y="162" width="242" height="24" rx="4" fill="#5c1a1a" stroke="#ef4444" stroke-width="0.7"/>
+  <text x="675" y="179" text-anchor="middle" fill="#ffc9c9" font-size="10">CTO: Password reuse (92% confidence)</text>
+
+  <rect x="554" y="192" width="242" height="24" rx="4" fill="#5c3d1a" stroke="#f59e0b" stroke-width="0.7"/>
+  <text x="675" y="209" text-anchor="middle" fill="#ffd8a8" font-size="10">Dev Lead: 1 breach (LinkedIn 2021)</text>
+
+  <rect x="554" y="222" width="242" height="24" rx="4" fill="#5c3d1a" stroke="#f59e0b" stroke-width="0.7"/>
+  <text x="675" y="239" text-anchor="middle" fill="#ffd8a8" font-size="10">SRE: Exposed in Shodan (admin panel)</text>
+
+  <rect x="554" y="252" width="242" height="24" rx="4" fill="#2d1b69" stroke="#8b5cf6" stroke-width="0.7"/>
+  <text x="675" y="269" text-anchor="middle" fill="#d0bfff" font-size="10">Infra: RDP 3389 open (vpn.acme.com)</text>
+
+  <rect x="554" y="282" width="242" height="24" rx="4" fill="#2d1b69" stroke="#8b5cf6" stroke-width="0.7"/>
+  <text x="675" y="299" text-anchor="middle" fill="#d0bfff" font-size="10">Infra: SSH 22 open (staging.acme.com)</text>
+
+  <rect x="554" y="312" width="242" height="24" rx="4" fill="#1a4d2e" stroke="#22c55e" stroke-width="0.7"/>
+  <text x="675" y="329" text-anchor="middle" fill="#b2f2bb" font-size="10">DNS: 4 internal subdomains leaked</text>
+
+  <rect x="554" y="342" width="242" height="24" rx="4" fill="#1a4d2e" stroke="#22c55e" stroke-width="0.7"/>
+  <text x="675" y="359" text-anchor="middle" fill="#b2f2bb" font-size="10">Email pattern: first.last@acme.com</text>
+
+  <!-- Org Risk Score -->
+  <rect x="554" y="378" width="242" height="34" rx="5" fill="#5c1a1a" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="610" y="400" text-anchor="middle" fill="#888" font-size="12" font-weight="600">ORG RISK:</text>
+  <text x="730" y="400" text-anchor="middle" fill="#ef4444" font-size="14" font-weight="700">CRITICAL (0.87)</text>
+
+  <!-- ==================== STAGE 4: ATTACK CHAIN ==================== -->
+  <text x="170" y="440" fill="#ef4444" font-size="12" font-weight="700" letter-spacing="1.5">STAGE 4 — RECOMMENDED ATTACK CHAIN</text>
+
+  <rect x="10" y="450" width="900" height="68" rx="6" fill="#5c1a1a" fill-opacity="0.06" stroke="#ef4444" stroke-width="0.6" stroke-opacity="0.15"/>
+
+  <rect x="22" y="458" width="190" height="50" rx="5" fill="#5c1a1a" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="117" y="478" text-anchor="middle" fill="#e5e5e5" font-size="11" font-weight="600">1. Spearphish CTO</text>
+  <text x="117" y="494" text-anchor="middle" fill="#888" font-size="9">via breached LinkedIn creds</text>
+
+  <line x1="212" y1="483" x2="236" y2="483" stroke="#ef4444" stroke-width="2" marker-end="url(#aR)"/>
+
+  <rect x="241" y="458" width="190" height="50" rx="5" fill="#5c3d1a" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="336" y="478" text-anchor="middle" fill="#e5e5e5" font-size="11" font-weight="600">2. Credential Stuffing</text>
+  <text x="336" y="494" text-anchor="middle" fill="#888" font-size="9">pwd reuse -> VPN login</text>
+
+  <line x1="431" y1="483" x2="455" y2="483" stroke="#f59e0b" stroke-width="2" marker-end="url(#aO)"/>
+
+  <rect x="460" y="458" width="190" height="50" rx="5" fill="#2d1b69" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="555" y="478" text-anchor="middle" fill="#e5e5e5" font-size="11" font-weight="600">3. Pivot via RDP</text>
+  <text x="555" y="494" text-anchor="middle" fill="#888" font-size="9">vpn.acme.com:3389</text>
+
+  <line x1="650" y1="483" x2="674" y2="483" stroke="#8b5cf6" stroke-width="2" marker-end="url(#aP)"/>
+
+  <rect x="679" y="458" width="220" height="50" rx="5" fill="#1a4d2e" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="789" y="478" text-anchor="middle" fill="#22c55e" font-size="12" font-weight="700">4. INTERNAL ACCESS</text>
+  <text x="789" y="494" text-anchor="middle" fill="#888" font-size="9">staging.acme.com compromised</text>
+
+  <!-- Legend -->
+  <rect x="10" y="530" width="900" height="28" rx="4" fill="#0f0f1a" stroke="#222" stroke-width="0.5"/>
+  <text x="22" y="549" fill="#555" font-size="10">Risk:</text>
+  <rect x="52" y="538" width="55" height="16" rx="3" fill="#5c1a1a" stroke="#ef4444" stroke-width="0.6"/>
+  <text x="79" y="550" text-anchor="middle" fill="#ffc9c9" font-size="9">Critical</text>
+  <rect x="116" y="538" width="42" height="16" rx="3" fill="#5c3d1a" stroke="#f59e0b" stroke-width="0.6"/>
+  <text x="137" y="550" text-anchor="middle" fill="#ffd8a8" font-size="9">High</text>
+  <rect x="167" y="538" width="55" height="16" rx="3" fill="#2d1b69" stroke="#8b5cf6" stroke-width="0.6"/>
+  <text x="194" y="550" text-anchor="middle" fill="#d0bfff" font-size="9">Medium</text>
+  <rect x="231" y="538" width="40" height="16" rx="3" fill="#1a4d2e" stroke="#22c55e" stroke-width="0.6"/>
+  <text x="251" y="550" text-anchor="middle" fill="#b2f2bb" font-size="9">Low</text>
+  <text x="290" y="549" fill="#444" font-size="9">(0.00 - 1.00) Weighted Exposure Score</text>
+  <text x="780" y="549" fill="#333" font-size="9">Elijah Bellamy  |  164 tests  |  github.com</text>
+</svg>
