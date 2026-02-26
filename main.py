@@ -38,6 +38,7 @@ from src.recon.collectors import (
 from src.graph.builder import OSINTGraphBuilder
 from src.scoring.exposure import ExposureScorer
 from src.reporting.generator import ReportGenerator
+from src.demo.generator import generate_demo_organization
 from src.utils.display import (
     console,
     print_banner,
@@ -462,19 +463,286 @@ async def run_assessment(config: dict, target_name: str, target_domain: str = No
     return org_score
 
 
+async def run_demo_assessment(config: dict):
+    """
+    Run a full assessment pipeline with synthetic demo data.
+
+    Skips all API collectors and uses pre-built fake data so the tool
+    can be showcased without any API keys.  Every downstream stage
+    (graph building, scoring, reporting) runs identically to a real
+    assessment.
+    """
+    logger = logging.getLogger(__name__)
+    start_time = time.time()
+
+    Path("data/exports").mkdir(parents=True, exist_ok=True)
+    Path("data/raw").mkdir(parents=True, exist_ok=True)
+
+    # ── Banner ─────────────────────────────────────────────────
+    print_banner()
+
+    org = generate_demo_organization()
+    target_name = org.name
+    domain = org.domain
+
+    demo_collectors = [
+        "GitHub", "Shodan", "HIBP", "Hunter.io", "DNS/CT", "WebScraper",
+    ]
+    print_target_info(target_name, domain, demo_collectors)
+    console.print("[bold yellow]  ⚡ DEMO MODE — using synthetic data (no API keys needed)[/bold yellow]\n")
+
+    # ── Stage 1: Discovery (pre-built) ─────────────────────────
+    print_stage(1, "Reconnaissance", "Loading synthetic OSINT data")
+
+    repo_count = len(org.infrastructure.get("github_repos", []))
+    email_count = len(org.infrastructure.get("commit_emails", []))
+    host_count = len(org.infrastructure.get("hosts", []))
+    vuln_count = len(org.infrastructure.get("vulnerabilities", []))
+    breach_count = len(org.breach_data)
+    hunter_emails = len(org.infrastructure.get("hunter_emails", []))
+    subdomain_count = len(org.infrastructure.get("subdomains", []))
+    ip_count = len(org.infrastructure.get("ip_addresses", []))
+    mail_count = len(org.infrastructure.get("mail_servers", []))
+
+    print_substep(f"Found {org.employee_count} people", "ok")
+    print_substep(f"Found {repo_count} public repositories", "ok")
+    print_substep(f"Found {email_count} emails in commit history", "ok")
+    print_substep(f"Found {host_count} internet-facing hosts", "ok")
+    print_substep(f"Found {vuln_count} known CVEs", "warn")
+    print_substep(f"{breach_count} emails found in data breaches", "warn")
+    print_substep(f"Hunter.io: {hunter_emails} emails discovered", "ok")
+    email_pattern = org.infrastructure.get("email_pattern")
+    if email_pattern:
+        print_substep(f"Email pattern: {email_pattern}@{domain}", "ok")
+    print_substep(f"CT logs: {subdomain_count} subdomains discovered", "ok")
+    print_substep(f"DNS: {ip_count} unique IPs, {mail_count} mail servers", "ok")
+
+    security = org.infrastructure.get("security_headers", {})
+    if security:
+        spf = security.get("SPF", {}).get("present", False)
+        dmarc = security.get("DMARC", {}).get("present", False)
+        if not spf or not dmarc:
+            missing = []
+            if not spf:
+                missing.append("SPF")
+            if not dmarc:
+                missing.append("DMARC")
+            print_substep(f"Missing email security: {', '.join(missing)}", "warn")
+
+    # Save raw data
+    raw_data = {
+        "target": target_name,
+        "domain": domain,
+        "demo_mode": True,
+        "employee_count": org.employee_count,
+        "employees": [
+            {
+                "name": p.name,
+                "role": p.role,
+                "email": p.email,
+                "profiles": p.social_profiles,
+                "metadata": p.metadata,
+            }
+            for p in org.employees
+        ],
+        "infrastructure": org.infrastructure,
+        "documents": org.documents,
+        "breach_data": org.breach_data,
+    }
+    with open("data/raw/discovery_results.json", "w") as f:
+        json.dump(raw_data, f, indent=2, default=str)
+    print_substep("Raw data saved to data/raw/discovery_results.json", "ok")
+
+    console.print()
+    print_discovery_results(org.employee_count, repo_count, email_count)
+
+    # ── Stage 2: Graph Building ────────────────────────────────
+    print_stage(2, "Network Graph Analysis", "Mapping relationships and identifying key targets")
+
+    graph_builder = OSINTGraphBuilder(config)
+    node_count = graph_builder.add_people_from_discovery(org)
+    print_substep(f"Added {node_count} nodes to graph", "ok")
+
+    stats = {}
+    high_value = []
+    centrality = {}
+
+    if node_count > 1:
+        graph_builder.add_org_membership_edges(org)
+        print_substep("Added organization membership edges", "ok")
+
+        # In demo mode we skip live GitHub API calls for collab/follower edges.
+        # The org membership edges alone give us a connected graph for analysis.
+
+        with status_spinner("Computing centrality metrics..."):
+            analysis = graph_builder.build_and_analyze()
+
+        if analysis["status"] == "complete":
+            stats = analysis["stats"]
+            high_value = analysis["high_value_targets"]
+            centrality = analysis["centrality"]
+
+            print_substep(
+                f"Graph built: {stats['total_nodes']} nodes, "
+                f"{stats['total_edges']} edges",
+                "ok",
+            )
+            print_substep(f"Identified {len(high_value)} high-value targets", "ok")
+
+            graph_builder.export("data/exports/network_graph.gexf")
+            print_substep("Exported GEXF for Gephi", "ok")
+
+            graph_builder.generate_pyvis_html("data/exports/network_graph.html")
+            print_substep("Generated interactive HTML graph", "ok")
+
+            console.print()
+            print_graph_results(stats, high_value)
+
+    # ── Stage 3: Exposure Scoring ──────────────────────────────
+    print_stage(3, "Exposure Scoring", "Calculating risk scores for individuals and organization")
+
+    scorer = ExposureScorer(config.get("scoring", {}))
+    person_scores = []
+
+    with status_spinner("Scoring individual exposure..."):
+        for person in org.employees:
+            person_breach = {}
+            if person.email and person.email.lower() in org.breach_data:
+                person_breach = org.breach_data[person.email.lower()]
+            graph_metrics = centrality
+            score = scorer.score_person(person, person_breach, graph_metrics)
+            person_scores.append(score)
+
+    if person_scores:
+        print_substep(f"Scored {len(person_scores)} individuals", "ok")
+
+    org_score = scorer.score_organization(
+        person_scores, org.infrastructure, breach_data=org.breach_data
+    )
+    print_substep(
+        f"Organization score: {org_score.overall_score:.1f}/10.0 "
+        f"({org_score.risk_level.value.upper()})",
+        "ok",
+    )
+
+    console.print()
+    print_scoring_results(org_score, person_scores)
+
+    # ── Stage 4: Report Generation ─────────────────────────────
+    print_stage(4, "Report Generation", "Creating assessment deliverables")
+
+    reporter = ReportGenerator(
+        output_dir=config.get("reporting", {}).get("output_dir", "data/exports")
+    )
+
+    attack_paths = []
+    if high_value and graph_builder.graph._graph:
+        for target in high_value[:3]:
+            paths = graph_builder.graph.find_attack_paths(target.id)
+            attack_paths.extend(paths)
+        if attack_paths:
+            print_substep(f"Mapped {len(attack_paths)} attack paths", "ok")
+
+    # JSON
+    json_path = reporter.generate_json_export(org_score, person_scores)
+    print_substep("JSON findings exported", "ok")
+
+    # PDF
+    try:
+        pdf_path = reporter.generate_pdf_report(
+            org_score=org_score,
+            person_scores=person_scores,
+            graph_stats=stats or {},
+            high_value_targets=high_value,
+            attack_paths=attack_paths,
+            org_name=target_name,
+            domain=domain or "",
+        )
+        print_substep("PDF assessment report generated", "ok")
+    except Exception as e:
+        pdf_path = None
+        print_substep(f"PDF generation failed: {e}", "fail")
+
+    # HTML
+    try:
+        graph_data = {}
+        if graph_builder.graph._graph:
+            graph_nodes = {}
+            for node_id, node in graph_builder.graph.nodes.items():
+                graph_nodes[node_id] = {
+                    "label": node.label,
+                    "node_type": node.node_type,
+                    **node.attributes,
+                }
+            graph_edges = []
+            for edge in graph_builder.graph.edges:
+                graph_edges.append({
+                    "source": edge.source_id,
+                    "target": edge.target_id,
+                    "relation": edge.relation_type.value,
+                    "weight": edge.weight,
+                })
+            graph_data = {"nodes": graph_nodes, "edges": graph_edges}
+
+        html_path = reporter.generate_html_report(
+            org_score=org_score,
+            person_scores=person_scores,
+            graph_data=graph_data,
+            graph_stats=stats or {},
+            high_value_targets=high_value,
+            attack_paths=attack_paths,
+            org_name=target_name,
+            domain=domain or "",
+        )
+        print_substep("Interactive HTML dashboard generated", "ok")
+    except Exception as e:
+        html_path = None
+        print_substep(f"HTML dashboard failed: {e}", "fail")
+
+    # ── Final Summary ──────────────────────────────────────────
+    elapsed = time.time() - start_time
+
+    exports = {
+        "PDF Report": pdf_path,
+        "HTML Dashboard": html_path,
+        "JSON Findings": json_path,
+        "Network Graph (HTML)": "data/exports/network_graph.html" if stats else None,
+        "Network Graph (GEXF)": "data/exports/network_graph.gexf" if stats else None,
+        "Raw Discovery Data": "data/raw/discovery_results.json",
+    }
+
+    print_final_summary(
+        target_name=target_name,
+        employee_count=org.employee_count,
+        stats=stats,
+        high_value_count=len(high_value),
+        org_score_value=org_score.overall_score,
+        risk_level=org_score.risk_level.value,
+        elapsed_seconds=elapsed,
+        exports={k: v for k, v in exports.items() if v},
+    )
+
+    return org_score
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="OSINT Recon & Social Network Attack Surface Mapper",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
+  python main.py --demo                              # Run with synthetic data
   python main.py --target "Netflix" --domain netflix.com
   python main.py --target "Anthropic" --github-only
   python main.py --config config/settings.yaml --target "Acme Corp"
         """,
     )
     parser.add_argument(
-        "--target", "-t", required=True, help="Target organization name"
+        "--target", "-t", help="Target organization name (not needed with --demo)"
+    )
+    parser.add_argument(
+        "--demo", action="store_true",
+        help="Run with synthetic demo data (no API keys needed)",
     )
     parser.add_argument(
         "--domain", "-d", help="Target organization domain"
@@ -499,6 +767,13 @@ Examples:
 
 def main():
     args = parse_args()
+
+    if not args.demo and not args.target:
+        print("Error: --target is required unless using --demo mode.")
+        print("Usage: python main.py --target 'Org Name' --domain example.com")
+        print("       python main.py --demo")
+        sys.exit(1)
+
     config = load_config(args.config)
 
     if args.github_only:
@@ -512,7 +787,10 @@ def main():
     if args.output_dir:
         config.setdefault("reporting", {})["output_dir"] = args.output_dir
 
-    asyncio.run(run_assessment(config, args.target, args.domain))
+    if args.demo:
+        asyncio.run(run_demo_assessment(config))
+    else:
+        asyncio.run(run_assessment(config, args.target, args.domain))
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/yourusername/osint-mapper/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
-![Tests](https://img.shields.io/badge/tests-164%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-194%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 A red team OSINT tool that maps an organization's social network attack surface through ethical open-source intelligence gathering, scores exposure risk, and generates professional assessment reports.
@@ -58,7 +58,10 @@ pip install -r requirements.txt
 cp config/settings.yaml config/settings.local.yaml
 # Edit settings.local.yaml with your API keys
 
-# Run an assessment
+# Run the demo (no API keys needed!)
+python main.py --demo
+
+# Or run a real assessment
 python main.py --target "Example Corp" --domain example.com
 ```
 
@@ -73,9 +76,22 @@ Copy `config/settings.yaml` to `config/settings.local.yaml` and add your API key
 | HIBP API Key | Optional | $3.50/month | Breach exposure checking |
 | Hunter.io API Key | Optional | Yes (25 req/month) | Email discovery and verification |
 
+## Demo Mode
+
+Run a full assessment against a synthetic organization with **zero configuration** — no API keys needed:
+
+```bash
+python main.py --demo
+```
+
+This generates all six output files (PDF report, HTML dashboard, JSON findings, interactive network graph, GEXF export, and raw discovery data) using a realistic fake company called "NovaTech Solutions" with 12 employees, breach data, CVEs, open ports, and subdomains. It is the fastest way to see every feature in action.
+
 ## Usage Examples
 
 ```bash
+# Demo mode (no API keys needed)
+python main.py --demo
+
 # Full assessment with all collectors
 python main.py --target "Acme Corp" --domain acme.com
 
@@ -118,6 +134,8 @@ OSINT/
 │   │   └── exposure.py        # Exposure scoring engine
 │   ├── reporting/
 │   │   └── generator.py       # PDF/HTML/JSON report generation
+│   ├── demo/
+│   │   └── generator.py       # Synthetic data for --demo mode
 │   └── utils/
 ├── tests/
 │   ├── test_discovery.py
@@ -125,7 +143,8 @@ OSINT/
 │   ├── test_scoring.py
 │   ├── test_phase2_collectors.py
 │   ├── test_phase3_collectors.py
-│   └── test_reporting.py
+│   ├── test_reporting.py
+│   └── test_demo.py
 ├── data/
 │   ├── raw/                   # Raw collected data
 │   ├── processed/             # Normalized data
