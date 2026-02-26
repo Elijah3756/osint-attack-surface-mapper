@@ -150,6 +150,173 @@ class TestHIBPCollector:
         collector = HIBPCollector(config={"hibp_api_key": "k", "rate_limit_delay": 0.5})
         assert collector.rate_limit_delay >= 1.5
 
+    # ── Tiered account tests ──────────────────────────────────
+
+    def test_default_tier_is_pwned_1(self):
+        """When no tier is specified, default to pwned_1."""
+        collector = HIBPCollector(config={"hibp_api_key": "k"})
+        assert collector.tier_key == "pwned_1"
+        assert collector.tier_label == "Pwned 1 (Base)"
+        assert collector.breached_per_domain == 25
+
+    def test_tier_pwned_1_rate(self):
+        """pwned_1 tier: 10 rpm → 6.0s delay."""
+        collector = HIBPCollector(config={"hibp_api_key": "k", "account_tier": "pwned_1"})
+        assert collector.rate_limit_delay == 6.0
+
+    def test_tier_pwned_2(self):
+        """pwned_2 tier: 50 rpm → 1.5s delay (HIBP floor), 50/domain."""
+        collector = HIBPCollector(config={"hibp_api_key": "k", "account_tier": "pwned_2"})
+        assert collector.tier_key == "pwned_2"
+        assert collector.rate_limit_delay == 1.5  # max(1.5, 60/50=1.2) = 1.5
+        assert collector.breached_per_domain == 50
+
+    def test_tier_pwned_3(self):
+        """pwned_3 tier: unlimited rpm & domain cap."""
+        collector = HIBPCollector(config={"hibp_api_key": "k", "account_tier": "pwned_3"})
+        assert collector.tier_key == "pwned_3"
+        assert collector.rate_limit_delay == 1.5  # HIBP floor only
+        assert collector.breached_per_domain == 0  # 0 = unlimited
+
+    def test_tier_pwned_4(self):
+        """pwned_4 tier: unlimited + domain search flag."""
+        collector = HIBPCollector(config={"hibp_api_key": "k", "account_tier": "pwned_4"})
+        assert collector.tier_key == "pwned_4"
+        assert collector.tier["domain_search"] is True
+
+    def test_unknown_tier_falls_back(self):
+        """Unknown tier name falls back to pwned_1."""
+        collector = HIBPCollector(config={"hibp_api_key": "k", "account_tier": "super_mega"})
+        assert collector.tier_key == "pwned_1"
+        assert collector.rate_limit_delay == 6.0
+
+    def test_tier_name_normalization(self):
+        """Tier names are case-insensitive and accept hyphens."""
+        collector = HIBPCollector(config={"hibp_api_key": "k", "account_tier": "Pwned-2"})
+        assert collector.tier_key == "pwned_2"
+
+    def test_config_override_delay(self):
+        """Config can increase delay but never below tier computed floor."""
+        collector = HIBPCollector(
+            config={"hibp_api_key": "k", "account_tier": "pwned_1", "rate_limit_delay": 10.0}
+        )
+        assert collector.rate_limit_delay == 10.0
+
+    def test_config_override_delay_clamped(self):
+        """Config delay below tier floor gets clamped up."""
+        collector = HIBPCollector(
+            config={"hibp_api_key": "k", "account_tier": "pwned_1", "rate_limit_delay": 2.0}
+        )
+        assert collector.rate_limit_delay == 6.0  # tier floor wins
+
+    def test_config_override_domain_cap(self):
+        """breached_per_domain in config overrides tier default."""
+        collector = HIBPCollector(
+            config={"hibp_api_key": "k", "account_tier": "pwned_1", "breached_per_domain": 10}
+        )
+        assert collector.breached_per_domain == 10
+
+    def test_available_tiers_classmethod(self):
+        """available_tiers() returns all tier definitions."""
+        tiers = HIBPCollector.available_tiers()
+        assert "pwned_1" in tiers
+        assert "pwned_2" in tiers
+        assert "pwned_3" in tiers
+        assert "pwned_4" in tiers
+        assert tiers["pwned_1"]["rpm"] == 10
+
+    @pytest.mark.asyncio
+    async def test_domain_cap_enforcement(self):
+        """Emails are skipped once the per-domain breach cap is hit."""
+        collector = HIBPCollector(
+            config={"hibp_api_key": "key", "account_tier": "pwned_1"}
+        )
+        assert collector.breached_per_domain == 25
+
+        org = Organization(name="Acme")
+        # Add 30 employees at same domain — cap should kick in at 25
+        for i in range(30):
+            org.add_employee(
+                Person(name=f"User{i}", organization="Acme", email=f"user{i}@acme.com")
+            )
+
+        call_count = 0
+
+        async def mock_breaches(session, email):
+            nonlocal call_count
+            call_count += 1
+            return [{"name": "Breach", "domain": "leak.com", "breach_date": "2024-01-01",
+                     "pwn_count": 100, "data_classes": ["Emails"], "is_verified": True,
+                     "is_sensitive": False}]
+
+        with patch.object(collector, "_check_breaches", side_effect=mock_breaches), \
+             patch.object(collector, "_check_pastes", return_value=[]), \
+             patch.object(collector, "_rate_limit_hibp", return_value=None):
+
+            results = await collector.collect(org)
+
+        # Should have stopped checking at 25 breached for acme.com
+        assert len(results["breach_data"]) == 25
+        assert call_count == 25
+
+    @pytest.mark.asyncio
+    async def test_unlimited_tier_no_domain_cap(self):
+        """pwned_3 tier has no domain cap — all emails are checked."""
+        collector = HIBPCollector(
+            config={"hibp_api_key": "key", "account_tier": "pwned_3"}
+        )
+        assert collector.breached_per_domain == 0  # unlimited
+
+        org = Organization(name="Acme")
+        for i in range(30):
+            org.add_employee(
+                Person(name=f"User{i}", organization="Acme", email=f"user{i}@acme.com")
+            )
+
+        async def mock_breaches(session, email):
+            return [{"name": "Breach", "domain": "leak.com", "breach_date": "2024-01-01",
+                     "pwn_count": 100, "data_classes": ["Emails"], "is_verified": True,
+                     "is_sensitive": False}]
+
+        with patch.object(collector, "_check_breaches", side_effect=mock_breaches), \
+             patch.object(collector, "_check_pastes", return_value=[]), \
+             patch.object(collector, "_rate_limit_hibp", return_value=None):
+
+            results = await collector.collect(org)
+
+        assert len(results["breach_data"]) == 30  # no cap
+
+    @pytest.mark.asyncio
+    async def test_domain_cap_per_domain(self):
+        """Domain cap is enforced independently per email domain."""
+        collector = HIBPCollector(
+            config={"hibp_api_key": "key", "breached_per_domain": 2}
+        )
+
+        org = Organization(name="Acme")
+        org.add_employee(Person(name="A", organization="Acme", email="a@foo.com"))
+        org.add_employee(Person(name="B", organization="Acme", email="b@foo.com"))
+        org.add_employee(Person(name="C", organization="Acme", email="c@foo.com"))
+        org.add_employee(Person(name="D", organization="Acme", email="d@bar.com"))
+        org.add_employee(Person(name="E", organization="Acme", email="e@bar.com"))
+        org.add_employee(Person(name="F", organization="Acme", email="f@bar.com"))
+
+        async def mock_breaches(session, email):
+            return [{"name": "Breach", "domain": "leak.com", "breach_date": "2024-01-01",
+                     "pwn_count": 100, "data_classes": ["Emails"], "is_verified": True,
+                     "is_sensitive": False}]
+
+        with patch.object(collector, "_check_breaches", side_effect=mock_breaches), \
+             patch.object(collector, "_check_pastes", return_value=[]), \
+             patch.object(collector, "_rate_limit_hibp", return_value=None):
+
+            results = await collector.collect(org)
+
+        # 2 from foo.com + 2 from bar.com = 4 total (1 skipped per domain)
+        assert len(results["breach_data"]) == 4
+
+    # ── Original tests ────────────────────────────────────────
+
     @pytest.mark.asyncio
     async def test_collect_skips_without_key(self):
         collector = HIBPCollector(config={})
@@ -222,7 +389,7 @@ class TestHIBPCollector:
 
         with patch.object(collector, "_check_breaches", return_value=mock_breaches), \
              patch.object(collector, "_check_pastes", return_value=[]), \
-             patch.object(collector, "_rate_limit", return_value=None):
+             patch.object(collector, "_rate_limit_hibp", return_value=None):
 
             results = await collector.collect(org)
 

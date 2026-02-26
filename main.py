@@ -291,6 +291,7 @@ async def run_assessment(config: dict, target_name: str, target_domain: str = No
     stats = {}
     high_value = []
     centrality = {}
+    pyvis_path = None
 
     if node_count > 1:
         graph_builder.add_org_membership_edges(org)
@@ -324,8 +325,9 @@ async def run_assessment(config: dict, target_name: str, target_domain: str = No
             graph_builder.export("data/exports/network_graph.gexf")
             print_substep("Exported GEXF for Gephi", "ok")
 
-            graph_builder.generate_pyvis_html("data/exports/network_graph.html")
-            print_substep("Generated interactive HTML graph", "ok")
+            pyvis_path = "data/exports/network_graph.html"
+            graph_builder.generate_pyvis_html(pyvis_path, org=org)
+            print_substep("Generated interactive HTML graph with tags", "ok")
 
             console.print()
             print_graph_results(stats, high_value)
@@ -393,7 +395,7 @@ async def run_assessment(config: dict, target_name: str, target_domain: str = No
             high_value_targets=high_value,
             attack_paths=attack_paths,
             org_name=target_name,
-            domain=domain or "",
+            domain=target_domain or "",
         )
         print_substep("PDF assessment report generated", "ok")
     except Exception as e:
@@ -430,7 +432,8 @@ async def run_assessment(config: dict, target_name: str, target_domain: str = No
             high_value_targets=high_value,
             attack_paths=attack_paths,
             org_name=target_name,
-            domain=domain or "",
+            domain=target_domain or "",
+            pyvis_html_path=pyvis_path,
         )
         print_substep("Interactive HTML dashboard generated", "ok")
     except Exception as e:
@@ -566,6 +569,7 @@ async def run_demo_assessment(config: dict):
     stats = {}
     high_value = []
     centrality = {}
+    pyvis_path = None
 
     if node_count > 1:
         graph_builder.add_org_membership_edges(org)
@@ -592,7 +596,8 @@ async def run_demo_assessment(config: dict):
             graph_builder.export("data/exports/network_graph.gexf")
             print_substep("Exported GEXF for Gephi", "ok")
 
-            graph_builder.generate_pyvis_html("data/exports/network_graph.html")
+            pyvis_path = "data/exports/network_graph.html"
+            graph_builder.generate_pyvis_html(pyvis_path, org=org)
             print_substep("Generated interactive HTML graph", "ok")
 
             console.print()
@@ -693,6 +698,7 @@ async def run_demo_assessment(config: dict):
             attack_paths=attack_paths,
             org_name=target_name,
             domain=domain or "",
+            pyvis_html_path=pyvis_path,
         )
         print_substep("Interactive HTML dashboard generated", "ok")
     except Exception as e:
@@ -790,7 +796,18 @@ def main():
     if args.demo:
         asyncio.run(run_demo_assessment(config))
     else:
-        asyncio.run(run_assessment(config, args.target, args.domain))
+        target = args.target
+        domain = args.domain
+
+        # Auto-detect: if --target looks like a domain, use it as both
+        # Must contain a dot, no spaces (avoid matching "Dr. Smith"), and have
+        # a TLD-length suffix after the last dot (2-6 chars like .com, .edu)
+        if not domain and "." in target and " " not in target:
+            last_part = target.rsplit(".", 1)[-1]
+            if 2 <= len(last_part) <= 6:
+                domain = target
+
+        asyncio.run(run_assessment(config, target, domain))
 
 
 if __name__ == "__main__":

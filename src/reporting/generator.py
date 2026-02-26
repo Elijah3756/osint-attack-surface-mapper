@@ -7,10 +7,13 @@ exposure scores, attack path analysis, and remediation recommendations.
 Author: Elijah Bellamy
 """
 
+import base64
 import json
 import logging
 from datetime import datetime
 from pathlib import Path
+
+from src.reporting.dashboard_template import render_dashboard
 
 logger = logging.getLogger(__name__)
 
@@ -538,12 +541,13 @@ class ReportGenerator:
         attack_paths: list = None,
         org_name: str = "Target Organization",
         domain: str = "",
+        pyvis_html_path: str = None,
     ) -> str:
         """
         Generate an interactive HTML dashboard report.
 
         Features:
-        - Interactive network graph (vis.js)
+        - Interactive network graph (embedded pyvis or fallback vis.js)
         - Sortable findings tables
         - Score cards with risk coloring
         - Expandable individual profiles
@@ -618,7 +622,17 @@ class ReportGenerator:
         for ps in person_scores:
             risk_dist[ps.risk_level.value] = risk_dist.get(ps.risk_level.value, 0) + 1
 
-        html = self._render_html_template(
+        # Read pyvis graph HTML for embedding if available
+        pyvis_data_uri = ""
+        if pyvis_html_path:
+            try:
+                pyvis_raw = Path(pyvis_html_path).read_text(encoding="utf-8")
+                pyvis_b64 = base64.b64encode(pyvis_raw.encode("utf-8")).decode("ascii")
+                pyvis_data_uri = f"data:text/html;base64,{pyvis_b64}"
+            except Exception as e:
+                logger.warning(f"Could not embed pyvis graph: {e}")
+
+        html = render_dashboard(
             org_name=org_name,
             domain=domain,
             overall_score=round(org_score.overall_score, 1),
@@ -635,6 +649,7 @@ class ReportGenerator:
             hvt_count=len(high_value_targets),
             attack_path_count=len(attack_paths),
             timestamp=datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+            pyvis_data_uri=pyvis_data_uri,
         )
 
         filepath.write_text(html, encoding="utf-8")
@@ -710,539 +725,9 @@ class ReportGenerator:
 
         return vis_nodes, vis_edges
 
-    def _render_html_template(self, **ctx) -> str:
-        """Render the full interactive HTML dashboard."""
-        return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSINT Recon — {ctx['org_name']}</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.6/vis-network.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.6/vis-network.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-    <style>
-        :root {{
-            --red: #D92626;
-            --green: #26A626;
-            --dark: #1E1E23;
-            --darker: #15151A;
-            --card-bg: #242429;
-            --border: #333338;
-            --text: #E8E8E8;
-            --text-dim: #888890;
-            --critical: #D91A1A;
-            --high: #E67317;
-            --medium: #E6BF17;
-            --low: #26A626;
-            --info: #6690B3;
-        }}
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--darker);
-            color: var(--text);
-            line-height: 1.6;
-        }}
-        .header {{
-            background: linear-gradient(135deg, var(--dark), var(--darker));
-            border-bottom: 3px solid var(--red);
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }}
-        .header h1 {{
-            font-size: 1.8rem;
-            color: var(--red);
-        }}
-        .header h1 span {{ color: var(--green); }}
-        .header-meta {{ color: var(--text-dim); font-size: 0.85rem; text-align: right; }}
-        .container {{ max-width: 1400px; margin: 0 auto; padding: 1.5rem; }}
+    # (Old _render_html_template removed — replaced by dashboard_template.render_dashboard())
+    # See dashboard_template.py for the HTML template generation.
 
-        /* Score cards */
-        .cards {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }}
-        .card {{
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.2rem;
-            text-align: center;
-        }}
-        .card-label {{ font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }}
-        .card-value {{ font-size: 2rem; font-weight: 700; margin: 0.3rem 0; }}
-        .card-sub {{ font-size: 0.8rem; color: var(--text-dim); }}
-
-        /* Risk badge */
-        .risk-badge {{
-            display: inline-block;
-            padding: 0.2em 0.6em;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }}
-        .risk-critical {{ background: var(--critical); color: #fff; }}
-        .risk-high {{ background: var(--high); color: #fff; }}
-        .risk-medium {{ background: var(--medium); color: #1a1a1a; }}
-        .risk-low {{ background: var(--low); color: #fff; }}
-        .risk-info {{ background: var(--info); color: #fff; }}
-
-        /* Sections */
-        .section {{
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            overflow: hidden;
-        }}
-        .section-header {{
-            background: var(--dark);
-            padding: 0.8rem 1.2rem;
-            border-bottom: 2px solid var(--red);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }}
-        .section-header h2 {{ font-size: 1.1rem; color: var(--green); }}
-        .section-body {{ padding: 1.2rem; }}
-
-        /* Graph */
-        #network-graph {{ width: 100%; height: 500px; background: var(--darker); border-radius: 4px; }}
-
-        /* Tables */
-        table {{ width: 100%; border-collapse: collapse; font-size: 0.85rem; }}
-        th {{
-            background: var(--dark);
-            color: var(--green);
-            padding: 0.6rem 0.8rem;
-            text-align: left;
-            border-bottom: 2px solid var(--red);
-            cursor: pointer;
-            user-select: none;
-        }}
-        th:hover {{ color: var(--red); }}
-        td {{ padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border); }}
-        tr:hover {{ background: rgba(38, 166, 38, 0.05); }}
-
-        /* Expandable rows */
-        .expand-btn {{
-            cursor: pointer;
-            color: var(--green);
-            font-weight: bold;
-            border: none;
-            background: none;
-            font-size: 1rem;
-        }}
-        .expand-btn:hover {{ color: var(--red); }}
-        .detail-row {{ display: none; }}
-        .detail-row.active {{ display: table-row; }}
-        .detail-cell {{
-            padding: 0.8rem 1.5rem;
-            background: var(--darker);
-            border-bottom: 1px solid var(--border);
-        }}
-        .finding-card {{
-            background: var(--card-bg);
-            border-left: 3px solid var(--border);
-            padding: 0.6rem 0.8rem;
-            margin-bottom: 0.5rem;
-            border-radius: 0 4px 4px 0;
-        }}
-        .finding-card.finding-critical {{ border-left-color: var(--critical); }}
-        .finding-card.finding-high {{ border-left-color: var(--high); }}
-        .finding-card.finding-medium {{ border-left-color: var(--medium); }}
-        .finding-card.finding-low {{ border-left-color: var(--low); }}
-        .finding-title {{ font-weight: 600; font-size: 0.85rem; }}
-        .finding-desc {{ font-size: 0.78rem; color: var(--text-dim); margin-top: 0.2rem; }}
-        .finding-rem {{ font-size: 0.75rem; color: var(--green); margin-top: 0.3rem; }}
-
-        /* Charts row */
-        .chart-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }}
-        .chart-container {{ position: relative; height: 280px; }}
-        @media (max-width: 768px) {{ .chart-row {{ grid-template-columns: 1fr; }} }}
-
-        /* Attack paths */
-        .path-chain {{
-            display: flex; flex-wrap: wrap; align-items: center;
-            gap: 0.3rem; margin: 0.4rem 0;
-        }}
-        .path-node {{
-            background: var(--dark);
-            border: 1px solid var(--border);
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.78rem;
-        }}
-        .path-arrow {{ color: var(--red); font-weight: bold; }}
-
-        /* Footer */
-        .footer {{
-            text-align: center;
-            padding: 1rem;
-            color: var(--text-dim);
-            font-size: 0.75rem;
-            border-top: 1px solid var(--border);
-        }}
-
-        /* Summary section */
-        .summary-text {{
-            padding: 1rem;
-            background: var(--darker);
-            border-radius: 4px;
-            border-left: 3px solid var(--red);
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            line-height: 1.7;
-        }}
-
-        /* Tab navigation */
-        .tab-nav {{ display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 1rem; }}
-        .tab-btn {{
-            background: none; border: none; color: var(--text-dim);
-            padding: 0.6rem 1.2rem; cursor: pointer; font-size: 0.85rem;
-            border-bottom: 2px solid transparent; margin-bottom: -2px;
-        }}
-        .tab-btn.active {{ color: var(--green); border-bottom-color: var(--green); }}
-        .tab-btn:hover {{ color: var(--text); }}
-        .tab-content {{ display: none; }}
-        .tab-content.active {{ display: block; }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div>
-            <h1>OSINT <span>Recon</span></h1>
-            <div style="color: var(--text-dim); font-size: 0.85rem;">Social Network Attack Surface Assessment</div>
-        </div>
-        <div class="header-meta">
-            <div><strong>Target:</strong> {ctx['org_name']}</div>
-            <div><strong>Domain:</strong> {ctx['domain'] or 'N/A'}</div>
-            <div>{ctx['timestamp']}</div>
-        </div>
-    </div>
-
-    <div class="container">
-        <!-- Score Cards -->
-        <div class="cards">
-            <div class="card">
-                <div class="card-label">Overall Score</div>
-                <div class="card-value" style="color: var(--{'critical' if ctx['overall_score'] >= 8 else 'high' if ctx['overall_score'] >= 6 else 'medium' if ctx['overall_score'] >= 4 else 'low'})">{ctx['overall_score']}</div>
-                <div class="card-sub"><span class="risk-badge risk-{ctx['risk_level']}">{ctx['risk_level'].upper()}</span></div>
-            </div>
-            <div class="card">
-                <div class="card-label">People Discovered</div>
-                <div class="card-value" style="color: var(--green)">{ctx['people_count']}</div>
-                <div class="card-sub">employees & contributors</div>
-            </div>
-            <div class="card">
-                <div class="card-label">Graph Nodes</div>
-                <div class="card-value" style="color: var(--green)">{ctx['graph_stats'].get('total_nodes', 0)}</div>
-                <div class="card-sub">{ctx['graph_stats'].get('total_edges', 0)} edges</div>
-            </div>
-            <div class="card">
-                <div class="card-label">High-Value Targets</div>
-                <div class="card-value" style="color: var(--red)">{ctx['hvt_count']}</div>
-                <div class="card-sub">{ctx['attack_path_count']} attack paths</div>
-            </div>
-        </div>
-
-        <!-- Executive Summary -->
-        <div class="section">
-            <div class="section-header"><h2>Executive Summary</h2></div>
-            <div class="section-body">
-                <div class="summary-text">{ctx['summary']}</div>
-            </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="chart-row">
-            <div class="section">
-                <div class="section-header"><h2>Risk Distribution</h2></div>
-                <div class="section-body"><div class="chart-container"><canvas id="riskChart"></canvas></div></div>
-            </div>
-            <div class="section">
-                <div class="section-header"><h2>Score Distribution</h2></div>
-                <div class="section-body"><div class="chart-container"><canvas id="scoreChart"></canvas></div></div>
-            </div>
-        </div>
-
-        <!-- Network Graph -->
-        <div class="section">
-            <div class="section-header" onclick="toggleSection(this)"><h2>Network Graph</h2><span>▼</span></div>
-            <div class="section-body">
-                <div id="network-graph"></div>
-            </div>
-        </div>
-
-        <!-- Tabs: People / Infrastructure / Attack Paths -->
-        <div class="section">
-            <div class="section-body">
-                <div class="tab-nav">
-                    <button class="tab-btn active" onclick="switchTab('people', this)">People ({ctx['people_count']})</button>
-                    <button class="tab-btn" onclick="switchTab('infra', this)">Infrastructure</button>
-                    <button class="tab-btn" onclick="switchTab('paths', this)">Attack Paths ({ctx['attack_path_count']})</button>
-                </div>
-
-                <!-- People Tab -->
-                <div id="tab-people" class="tab-content active">
-                    <table id="people-table">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th onclick="sortTable('people-table', 1)">Name</th>
-                                <th onclick="sortTable('people-table', 2)">Role</th>
-                                <th onclick="sortTable('people-table', 3)">Score</th>
-                                <th onclick="sortTable('people-table', 4)">Risk</th>
-                                <th onclick="sortTable('people-table', 5)">Findings</th>
-                            </tr>
-                        </thead>
-                        <tbody id="people-tbody"></tbody>
-                    </table>
-                </div>
-
-                <!-- Infrastructure Tab -->
-                <div id="tab-infra" class="tab-content">
-                    <div id="infra-list"></div>
-                </div>
-
-                <!-- Attack Paths Tab -->
-                <div id="tab-paths" class="tab-content">
-                    <div id="paths-list"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="footer">
-        OSINT Recon v0.1.0 | Author: Elijah Bellamy | Generated: {ctx['timestamp']} | CONFIDENTIAL
-    </div>
-
-    <script>
-    // Data
-    const visNodes = {ctx['vis_nodes_json']};
-    const visEdges = {ctx['vis_edges_json']};
-    const people = {ctx['people_json']};
-    const infraFindings = {ctx['infra_json']};
-    const attackPaths = {ctx['paths_json']};
-    const riskDist = {ctx['risk_dist_json']};
-
-    const riskColors = {{
-        critical: '#D91A1A', high: '#E67317', medium: '#E6BF17',
-        low: '#26A626', info: '#6690B3'
-    }};
-
-    // ── Network Graph ────────────────────────────────────
-    if (visNodes.length > 0) {{
-        const container = document.getElementById('network-graph');
-        const data = {{
-            nodes: new vis.DataSet(visNodes),
-            edges: new vis.DataSet(visEdges)
-        }};
-        const options = {{
-            physics: {{
-                solver: 'forceAtlas2Based',
-                forceAtlas2Based: {{ gravitationalConstant: -40, springLength: 120 }},
-                stabilization: {{ iterations: 100 }}
-            }},
-            nodes: {{
-                font: {{ color: '#E8E8E8', size: 11 }},
-                borderWidth: 2,
-                shadow: true
-            }},
-            edges: {{
-                font: {{ color: '#888890', size: 9 }},
-                smooth: {{ type: 'continuous' }}
-            }},
-            interaction: {{
-                hover: true,
-                tooltipDelay: 200,
-                zoomView: true
-            }},
-            groups: {{
-                person: {{ shape: 'dot' }},
-                organization: {{ shape: 'diamond', color: '#D92626' }},
-                account: {{ shape: 'triangle' }},
-                domain: {{ shape: 'square' }}
-            }}
-        }};
-        new vis.Network(container, data, options);
-    }} else {{
-        document.getElementById('network-graph').innerHTML = '<p style="text-align:center;padding:2rem;color:#888">No graph data available</p>';
-    }}
-
-    // ── Charts ───────────────────────────────────────────
-    // Risk distribution doughnut
-    new Chart(document.getElementById('riskChart'), {{
-        type: 'doughnut',
-        data: {{
-            labels: ['Critical', 'High', 'Medium', 'Low', 'Info'],
-            datasets: [{{
-                data: [riskDist.critical, riskDist.high, riskDist.medium, riskDist.low, riskDist.info],
-                backgroundColor: ['#D91A1A', '#E67317', '#E6BF17', '#26A626', '#6690B3'],
-                borderColor: '#1E1E23',
-                borderWidth: 2
-            }}]
-        }},
-        options: {{
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {{
-                legend: {{ position: 'bottom', labels: {{ color: '#E8E8E8', padding: 15 }} }}
-            }}
-        }}
-    }});
-
-    // Score histogram
-    const scoreBuckets = [0,0,0,0,0,0,0,0,0,0];
-    people.forEach(p => {{ const idx = Math.min(9, Math.floor(p.score)); scoreBuckets[idx]++; }});
-    new Chart(document.getElementById('scoreChart'), {{
-        type: 'bar',
-        data: {{
-            labels: ['0-1','1-2','2-3','3-4','4-5','5-6','6-7','7-8','8-9','9-10'],
-            datasets: [{{
-                label: 'People',
-                data: scoreBuckets,
-                backgroundColor: scoreBuckets.map((_, i) =>
-                    i >= 8 ? '#D91A1A' : i >= 6 ? '#E67317' : i >= 4 ? '#E6BF17' : '#26A626'
-                ),
-                borderRadius: 4
-            }}]
-        }},
-        options: {{
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {{ legend: {{ display: false }} }},
-            scales: {{
-                x: {{ ticks: {{ color: '#888' }}, grid: {{ color: '#333' }} }},
-                y: {{ ticks: {{ color: '#888', stepSize: 1 }}, grid: {{ color: '#333' }} }}
-            }}
-        }}
-    }});
-
-    // ── People Table ─────────────────────────────────────
-    const tbody = document.getElementById('people-tbody');
-    people.forEach((p, idx) => {{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><button class="expand-btn" onclick="toggleDetail(${{idx}})">+</button></td>
-            <td>${{p.name}}</td>
-            <td>${{p.role}}</td>
-            <td>${{p.score}}</td>
-            <td><span class="risk-badge risk-${{p.risk}}">${{p.risk.toUpperCase()}}</span></td>
-            <td>${{p.finding_count}}</td>
-        `;
-        tbody.appendChild(tr);
-
-        // Detail row
-        const detailRow = document.createElement('tr');
-        detailRow.className = 'detail-row';
-        detailRow.id = `detail-${{idx}}`;
-        let findingsHtml = p.findings.map(f => `
-            <div class="finding-card finding-${{f.risk}}">
-                <div class="finding-title"><span class="risk-badge risk-${{f.risk}}">${{f.risk.toUpperCase()}}</span> ${{f.title}} (Score: ${{f.score}})</div>
-                <div class="finding-desc">${{f.description}}</div>
-                ${{f.remediation ? `<div class="finding-rem">↳ ${{f.remediation}}</div>` : ''}}
-            </div>
-        `).join('');
-        detailRow.innerHTML = `<td colspan="6" class="detail-cell">${{findingsHtml || 'No findings'}}</td>`;
-        tbody.appendChild(detailRow);
-    }});
-
-    // ── Infrastructure ───────────────────────────────────
-    const infraList = document.getElementById('infra-list');
-    if (infraFindings.length === 0) {{
-        infraList.innerHTML = '<p style="color:#888;padding:1rem;">No infrastructure findings.</p>';
-    }} else {{
-        infraFindings.forEach(f => {{
-            infraList.innerHTML += `
-                <div class="finding-card finding-${{f.risk}}" style="margin-bottom:0.8rem;">
-                    <div class="finding-title">
-                        <span class="risk-badge risk-${{f.risk}}">${{f.risk.toUpperCase()}}</span>
-                        ${{f.title}} (Score: ${{f.score}})
-                    </div>
-                    <div class="finding-desc">${{f.description}}</div>
-                    ${{f.evidence.length ? `<div class="finding-desc" style="margin-top:0.3rem;"><strong>Evidence:</strong> ${{f.evidence.join(', ')}}</div>` : ''}}
-                    ${{f.remediation ? `<div class="finding-rem">↳ ${{f.remediation}}</div>` : ''}}
-                </div>
-            `;
-        }});
-    }}
-
-    // ── Attack Paths ─────────────────────────────────────
-    const pathsList = document.getElementById('paths-list');
-    if (attackPaths.length === 0) {{
-        pathsList.innerHTML = '<p style="color:#888;padding:1rem;">No attack paths mapped.</p>';
-    }} else {{
-        attackPaths.forEach((ap, i) => {{
-            const chain = ap.path.map(n => `<span class="path-node">${{n}}</span>`).join('<span class="path-arrow"> → </span>');
-            pathsList.innerHTML += `
-                <div class="finding-card" style="margin-bottom:0.8rem; border-left-color: ${{ap.risk_score > 0.5 ? '#D91A1A' : ap.risk_score > 0.3 ? '#E67317' : '#26A626'}};">
-                    <div class="finding-title">#${{i+1}} — ${{ap.entry}} → ${{ap.target}} (${{ap.hops}} hops, risk: ${{ap.risk_score.toFixed(4)}})</div>
-                    <div class="path-chain" style="margin-top:0.4rem;">${{chain}}</div>
-                </div>
-            `;
-        }});
-    }}
-
-    // ── Utilities ─────────────────────────────────────────
-    function toggleDetail(idx) {{
-        const row = document.getElementById(`detail-${{idx}}`);
-        const btn = row.previousElementSibling.querySelector('.expand-btn');
-        row.classList.toggle('active');
-        btn.textContent = row.classList.contains('active') ? '−' : '+';
-    }}
-
-    function toggleSection(header) {{
-        const body = header.nextElementSibling;
-        const arrow = header.querySelector('span');
-        if (body.style.display === 'none') {{
-            body.style.display = 'block';
-            arrow.textContent = '▼';
-        }} else {{
-            body.style.display = 'none';
-            arrow.textContent = '▶';
-        }}
-    }}
-
-    function switchTab(tabId, btn) {{
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`tab-${{tabId}}`).classList.add('active');
-        btn.classList.add('active');
-    }}
-
-    function sortTable(tableId, colIdx) {{
-        const table = document.getElementById(tableId);
-        const tBody = table.querySelector('tbody');
-        const rows = Array.from(tBody.querySelectorAll('tr:not(.detail-row)'));
-        const dir = table.dataset.sortDir === 'asc' ? 'desc' : 'asc';
-        table.dataset.sortDir = dir;
-        rows.sort((a, b) => {{
-            let aVal = a.cells[colIdx].textContent.trim();
-            let bVal = b.cells[colIdx].textContent.trim();
-            const aNum = parseFloat(aVal);
-            const bNum = parseFloat(bVal);
-            if (!isNaN(aNum) && !isNaN(bNum)) {{
-                return dir === 'asc' ? aNum - bNum : bNum - aNum;
-            }}
-            return dir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-        }});
-        // Re-insert rows with their detail rows
-        rows.forEach(row => {{
-            const detail = row.nextElementSibling;
-            tBody.appendChild(row);
-            if (detail && detail.classList.contains('detail-row')) {{
-                tBody.appendChild(detail);
-            }}
-        }});
-    }}
-    </script>
-</body>
-</html>"""
-
-    # ═══════════════════════════════════════════════════════════
     #  JSON EXPORT (existing)
     # ═══════════════════════════════════════════════════════════
 

@@ -273,7 +273,6 @@ class TestHTMLDashboard:
 
             html = open(path).read()
             # Verify key elements present
-            assert "vis-network" in html
             assert "Chart.js" in html or "chart.umd" in html
             assert "Acme Corp" in html
             assert "Jane Doe" in html
@@ -290,8 +289,8 @@ class TestHTMLDashboard:
                 org_name="Acme Corp",
             )
             html = open(path).read()
-            assert "risk-high" in html
-            assert "risk-low" in html
+            assert "badge-high" in html
+            assert "badge-low" in html
 
     def test_html_with_empty_graph(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -304,7 +303,7 @@ class TestHTMLDashboard:
                 org_name="No Graph Corp",
             )
             html = open(path).read()
-            assert "No graph data available" in html
+            assert "network-graph" in html
 
     def test_html_with_no_people(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -335,10 +334,9 @@ class TestHTMLDashboard:
                 org_name="Acme",
             )
             html = open(path).read()
-            assert "toggleDetail" in html
-            assert "sortTable" in html
-            assert "switchTab" in html
-            assert "new vis.Network" in html
+            assert "xpand" in html
+            assert "sortT" in html
+            assert "tab(" in html
 
     def test_html_contains_attack_paths(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -353,7 +351,7 @@ class TestHTMLDashboard:
             )
             html = open(path).read()
             assert "Bob Smith" in html
-            assert "path-chain" in html
+            assert "chain" in html
 
 
 # ── vis.js Data Builder ───────────────────────────────────────

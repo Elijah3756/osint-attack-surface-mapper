@@ -36,7 +36,20 @@ collectors:
 
   hibp:
     enabled: true
-    rate_limit_delay: 1.5  # HIBP requires slower rate
+    # ── HIBP Account Tier ──────────────────────────────────
+    # Your HIBP subscription tier controls rate & volume limits.
+    # Supported tiers:
+    #   pwned_1  — 10 req/min, 25 breached emails/domain  (default)
+    #   pwned_2  — 50 req/min, 50 breached emails/domain
+    #   pwned_3  — unlimited req/min, unlimited/domain
+    #   pwned_4  — unlimited + domain-search API access
+    account_tier: "pwned_1"
+    # Override per-request delay (seconds). Must be >= 1.5s (HIBP hard floor).
+    # Automatically computed from tier RPM if omitted.
+    # rate_limit_delay: 6.0
+    # Override breached-email-per-domain cap (0 = unlimited).
+    # Automatically set from tier if omitted.
+    # breached_per_domain: 25
 
   web_scraper:
     enabled: true

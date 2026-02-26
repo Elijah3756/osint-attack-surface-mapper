@@ -734,18 +734,137 @@ class HIBPCollector(BaseCollector):
     emails, profile emails) and returns per-email breach exposure data.
 
     Requires a HIBP API key (paid — hibp-key header).
-    HIBP enforces a strict 1.5 s delay between requests.
+
+    Supports tiered HIBP subscriptions with different rate/volume limits:
+      - pwned_1 (base):  10 email lookups / minute, 25 breached emails / domain
+      - pwned_2:         50 lookups / minute, 50 breached emails / domain
+      - pwned_3:         unlimited lookups, unlimited per domain
+      - pwned_4:         unlimited + domain-search endpoint access
     """
 
     BASE_URL = "https://haveibeenpwned.com/api/v3"
 
+    # ── Tier definitions ────────────────────────────────────────
+    # Each tier specifies the hard limits imposed by the HIBP plan.
+    # `rate_limit_delay` is computed as max(1.5, 60 / rpm) so we
+    # never exceed the per-minute cap *or* HIBP's 1.5 s floor.
+    TIERS = {
+        "pwned_1": {
+            "label": "Pwned 1 (Base)",
+            "rpm": 10,                         # requests per minute
+            "breached_per_domain": 25,          # max breached emails kept per domain
+            "domain_search": False,             # no /breacheddomain endpoint
+        },
+        "pwned_2": {
+            "label": "Pwned 2",
+            "rpm": 50,
+            "breached_per_domain": 50,
+            "domain_search": False,
+        },
+        "pwned_3": {
+            "label": "Pwned 3",
+            "rpm": 0,                           # 0 = unlimited
+            "breached_per_domain": 0,            # 0 = unlimited
+            "domain_search": False,
+        },
+        "pwned_4": {
+            "label": "Pwned 4 (Enterprise)",
+            "rpm": 0,
+            "breached_per_domain": 0,
+            "domain_search": True,
+        },
+    }
+
+    # Absolute minimum delay HIBP allows between requests (all tiers)
+    HIBP_MIN_DELAY = 1.5
+
     def __init__(self, config: dict):
         super().__init__(config)
         self.api_key = config.get("hibp_api_key")
-        # HIBP mandates >= 1500 ms between requests
-        self.rate_limit_delay = max(
-            config.get("rate_limit_delay", 1.5), 1.5
-        )
+
+        # Resolve tier —————————————————————————————————
+        tier_key = config.get("account_tier", "pwned_1").lower().replace("-", "_")
+        if tier_key not in self.TIERS:
+            logger.warning(
+                f"Unknown HIBP tier '{tier_key}', falling back to pwned_1"
+            )
+            tier_key = "pwned_1"
+        self.tier_key = tier_key
+        self.tier = self.TIERS[tier_key]
+
+        # Compute effective delay from tier RPM
+        rpm = self.tier["rpm"]
+        if rpm > 0:
+            self.rate_limit_delay = max(self.HIBP_MIN_DELAY, 60.0 / rpm)
+        else:
+            self.rate_limit_delay = self.HIBP_MIN_DELAY
+
+        # Allow config override, but never below the computed floor
+        config_delay = config.get("rate_limit_delay")
+        if config_delay is not None:
+            self.rate_limit_delay = max(float(config_delay), self.rate_limit_delay)
+
+        # Per-domain breach cap (0 = unlimited)
+        self.breached_per_domain = self.tier["breached_per_domain"]
+        # Allow override from config
+        cfg_cap = config.get("breached_per_domain")
+        if cfg_cap is not None:
+            self.breached_per_domain = int(cfg_cap)
+
+        # Sliding-window tracking for per-minute enforcement
+        self._request_timestamps: list[float] = []
+
+    # ── Tier helpers ────────────────────────────────────────────
+
+    @classmethod
+    def available_tiers(cls) -> dict:
+        """Return a copy of the tier definitions (useful for UI / docs)."""
+        return {k: dict(v) for k, v in cls.TIERS.items()}
+
+    @property
+    def tier_label(self) -> str:
+        return self.tier["label"]
+
+    # ── Per-minute sliding-window rate limiter ──────────────────
+
+    async def _rate_limit_hibp(self):
+        """
+        Enforce BOTH the per-request floor (1.5 s) and the per-minute cap.
+
+        Uses a sliding window: before each request we wait until
+        (a) at least HIBP_MIN_DELAY since the last request, AND
+        (b) fewer than `rpm` requests occurred in the trailing 60 s.
+        """
+        rpm = self.tier["rpm"]
+        now = time.monotonic()
+
+        # (a) Per-request floor
+        if self._request_timestamps:
+            elapsed = now - self._request_timestamps[-1]
+            if elapsed < self.rate_limit_delay:
+                await asyncio.sleep(self.rate_limit_delay - elapsed)
+
+        # (b) Sliding-window RPM check (only if tier has a limit)
+        if rpm > 0:
+            while True:
+                now = time.monotonic()
+                cutoff = now - 60.0
+                # Prune old timestamps outside the window
+                self._request_timestamps = [
+                    ts for ts in self._request_timestamps if ts > cutoff
+                ]
+                if len(self._request_timestamps) < rpm:
+                    break
+                # Window full — sleep until the oldest entry expires
+                wait = self._request_timestamps[0] - cutoff + 0.1
+                self._report(
+                    f"HIBP rate limit: {rpm} rpm reached, "
+                    f"waiting {wait:.1f}s",
+                    "info",
+                )
+                await asyncio.sleep(wait)
+
+        self._request_timestamps.append(time.monotonic())
 
     def validate_config(self) -> bool:
         return self.api_key is not None
@@ -759,7 +878,8 @@ class HIBPCollector(BaseCollector):
            (profile emails + commit-scraped emails)
         2. Query HIBP breachedaccount endpoint for each email
         3. Optionally query paste endpoint for paste exposure
-        4. Return structured breach data keyed by email
+        4. Enforce per-domain breach cap from the account tier
+        5. Return structured breach data keyed by email
         """
         results = {"breach_data": {}}
 
@@ -773,8 +893,16 @@ class HIBPCollector(BaseCollector):
             self._report("No emails discovered yet — skipping HIBP", "info")
             return results
 
+        # Report tier info
         self._report(
-            f"HIBP collection starting: checking {len(emails)} emails"
+            f"HIBP tier: {self.tier_label}  "
+            f"({self.tier['rpm'] or '∞'} rpm, "
+            f"{self.breached_per_domain or '∞'} breached/domain)",
+            "info",
+        )
+        self._report(
+            f"HIBP collection starting: checking {len(emails)} emails "
+            f"(delay {self.rate_limit_delay:.1f}s/req)"
         )
 
         headers = {
@@ -782,9 +910,30 @@ class HIBPCollector(BaseCollector):
             "User-Agent": "OSINT-Recon-Tool/0.1 (Educational Research)",
         }
 
+        # Track breached-email count per domain for cap enforcement
+        breached_by_domain: dict[str, int] = {}
+
         async with aiohttp.ClientSession(headers=headers) as session:
+            skipped = 0
             for i, email in enumerate(emails):
-                await self._rate_limit()
+                # ── Per-domain breach cap ──────────────────────
+                email_domain = email.rsplit("@", 1)[-1].lower() if "@" in email else ""
+                if (
+                    self.breached_per_domain > 0
+                    and breached_by_domain.get(email_domain, 0)
+                    >= self.breached_per_domain
+                ):
+                    skipped += 1
+                    self._report(
+                        f"  Skipping {email} — domain cap "
+                        f"({self.breached_per_domain}) reached for "
+                        f"{email_domain}",
+                        "info",
+                    )
+                    continue
+
+                # ── Rate limit (sliding-window) ────────────────
+                await self._rate_limit_hibp()
                 self._report(
                     f"Checking {i+1}/{len(emails)}: {email}", "info"
                 )
@@ -799,6 +948,9 @@ class HIBPCollector(BaseCollector):
                         "breach_count": len(breaches),
                         "paste_count": len(pastes),
                     }
+                    breached_by_domain[email_domain] = (
+                        breached_by_domain.get(email_domain, 0) + 1
+                    )
                     self._report(
                         f"  {email}: {len(breaches)} breaches, "
                         f"{len(pastes)} pastes",
@@ -808,11 +960,13 @@ class HIBPCollector(BaseCollector):
                     self._report(f"  {email}: clean", "ok")
 
         total_breached = len(results["breach_data"])
-        self._report(
+        summary = (
             f"HIBP collection complete: {total_breached}/{len(emails)} "
-            f"emails found in breaches",
-            "ok",
+            f"emails found in breaches"
         )
+        if skipped:
+            summary += f" ({skipped} skipped due to domain cap)"
+        self._report(summary, "ok")
         return results
 
     @staticmethod
@@ -891,7 +1045,7 @@ class HIBPCollector(BaseCollector):
         url = f"{self.BASE_URL}/pasteaccount/{email}"
 
         try:
-            await self._rate_limit()
+            await self._rate_limit_hibp()
             async with session.get(url) as resp:
                 if resp.status == 200:
                     data = await resp.json()

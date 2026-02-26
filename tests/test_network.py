@@ -173,3 +173,53 @@ class TestOSINTGraphBuilder:
         # Should map both name and github username
         assert "person 0" in builder._person_node_map
         assert "person0" in builder._person_node_map
+
+    def test_generate_pyvis_html_with_org(self, tmp_path):
+        """generate_pyvis_html with org parameter produces tagged HTML."""
+        pytest.importorskip("pyvis")
+        org = self._make_org_with_people(3)
+        builder = OSINTGraphBuilder()
+        builder.add_people_from_discovery(org)
+        builder.add_org_membership_edges(org)
+        builder.build_and_analyze()
+
+        filepath = str(tmp_path / "graph.html")
+        builder.generate_pyvis_html(filepath, org=org)
+
+        html = open(filepath).read()
+        # Should contain the legend panel
+        assert "tag-legend" in html or "legend" in html.lower()
+        # Should contain tooltip conversion script
+        assert "createElement" in html
+        # Should contain click-to-focus script
+        assert "getConnectedEdges" in html
+
+    def test_generate_pyvis_html_without_org(self, tmp_path):
+        """generate_pyvis_html without org still produces valid HTML."""
+        pytest.importorskip("pyvis")
+        org = self._make_org_with_people(3)
+        builder = OSINTGraphBuilder()
+        builder.add_people_from_discovery(org)
+        builder.add_org_membership_edges(org)
+        builder.build_and_analyze()
+
+        filepath = str(tmp_path / "graph.html")
+        builder.generate_pyvis_html(filepath)
+
+        html = open(filepath).read()
+        assert "<html" in html.lower()
+        assert "vis" in html.lower()
+
+    def test_generate_pyvis_html_no_pyvis(self):
+        """generate_pyvis_html handles missing pyvis gracefully."""
+        import unittest.mock as mock
+
+        builder = OSINTGraphBuilder()
+        builder.graph.add_node(
+            GraphNode(id="p1", label="Alice", node_type="person")
+        )
+        builder.build_and_analyze()
+
+        with mock.patch.dict("sys.modules", {"pyvis": None, "pyvis.network": None}):
+            # Should log error but not raise
+            builder.generate_pyvis_html("/tmp/test_graph.html")
