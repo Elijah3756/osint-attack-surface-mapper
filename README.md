@@ -1,0 +1,164 @@
+# OSINT Recon & Social Network Attack Surface Mapper
+
+![CI](https://github.com/yourusername/osint-mapper/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
+![Tests](https://img.shields.io/badge/tests-164%20passing-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+A red team OSINT tool that maps an organization's social network attack surface through ethical open-source intelligence gathering, scores exposure risk, and generates professional assessment reports.
+
+## What It Does
+
+This tool automates the OSINT reconnaissance phase of a red team engagement:
+
+1. **Discovers** employees and accounts across GitHub, corporate websites, and public records
+2. **Maps** relationships between people using social network graph analysis
+3. **Checks** discovered accounts against breach databases (Have I Been Pwned) and infrastructure exposure (Shodan)
+4. **Scores** individual and organizational exposure using a weighted risk model
+5. **Identifies** high-value targets and optimal social engineering attack paths
+6. **Generates** professional PDF/HTML reports with interactive network visualizations
+
+## Architecture
+
+```
+CLI (main.py)
+  │
+  ├── Discovery Engine
+  │     ├── GitHub Collector (org members, commit emails, repos)
+  │     ├── Shodan Collector (infrastructure, open ports, CVEs)
+  │     ├── HIBP Collector (breach exposure checking)
+  │     └── Web Scraper (corporate sites, document metadata)
+  │
+  ├── Network Graph Builder (NetworkX)
+  │     ├── Centrality analysis (degree, betweenness, PageRank)
+  │     ├── Attack path computation
+  │     └── Gephi/pyvis export
+  │
+  ├── Exposure Scorer
+  │     ├── Breach exposure (30%)
+  │     ├── Social media footprint (25%)
+  │     ├── Infrastructure exposure (25%)
+  │     └── Metadata leakage (20%)
+  │
+  └── Report Generator
+        ├── PDF (executive red team report)
+        ├── HTML (interactive graph + findings)
+        └── JSON (machine-readable export)
+```
+
+## Quick Start
+
+```bash
+# Clone the repo
+git clone https://github.com/yourusername/osint-mapper.git
+cd osint-mapper
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure API keys
+cp config/settings.yaml config/settings.local.yaml
+# Edit settings.local.yaml with your API keys
+
+# Run an assessment
+python main.py --target "Example Corp" --domain example.com
+```
+
+## Configuration
+
+Copy `config/settings.yaml` to `config/settings.local.yaml` and add your API keys:
+
+| API | Required | Free Tier | Purpose |
+|-----|----------|-----------|---------|
+| GitHub Token | Recommended | Yes (5000 req/hr) | Org member discovery, commit analysis |
+| Shodan API Key | Optional | Yes (limited) | Infrastructure scanning |
+| HIBP API Key | Optional | $3.50/month | Breach exposure checking |
+| Hunter.io API Key | Optional | Yes (25 req/month) | Email discovery and verification |
+
+## Usage Examples
+
+```bash
+# Full assessment with all collectors
+python main.py --target "Acme Corp" --domain acme.com
+
+# GitHub-only reconnaissance
+python main.py --target "Acme Corp" --collectors github
+
+# Verbose output for debugging
+python main.py --target "Acme Corp" --domain acme.com -v
+
+# Custom output directory
+python main.py --target "Acme Corp" -o ./reports
+```
+
+## Output
+
+The tool generates three report formats:
+
+- **PDF Report** - Professional red team assessment with executive summary, network graphs, exposure scores, attack paths, and remediation recommendations
+- **HTML Report** - Interactive version with clickable network graph and sortable findings tables
+- **JSON Export** - Machine-readable findings for integration with other tools
+
+## Project Structure
+
+```
+OSINT/
+├── main.py                    # CLI entry point and pipeline orchestration
+├── requirements.txt           # Python dependencies
+├── config/
+│   └── settings.yaml          # Configuration template
+├── src/
+│   ├── recon/
+│   │   ├── discovery.py       # Discovery engine and data models
+│   │   ├── collectors.py      # GitHub, Shodan, HIBP, WebScraper collectors
+│   │   ├── hunter_collector.py  # Hunter.io email discovery
+│   │   └── dns_collector.py   # DNS records and certificate transparency
+│   ├── graph/
+│   │   ├── network.py         # NetworkX graph builder and analysis
+│   │   └── builder.py         # OSINT-specific graph construction
+│   ├── scoring/
+│   │   └── exposure.py        # Exposure scoring engine
+│   ├── reporting/
+│   │   └── generator.py       # PDF/HTML/JSON report generation
+│   └── utils/
+├── tests/
+│   ├── test_discovery.py
+│   ├── test_network.py
+│   ├── test_scoring.py
+│   ├── test_phase2_collectors.py
+│   ├── test_phase3_collectors.py
+│   └── test_reporting.py
+├── data/
+│   ├── raw/                   # Raw collected data
+│   ├── processed/             # Normalized data
+│   └── exports/               # Generated reports
+├── docs/
+│   └── ROADMAP.md             # Development roadmap
+└── templates/                 # Report templates
+```
+
+## Ethical Use
+
+This tool is designed for **authorized red team engagements and security research only**. By using this tool you agree to:
+
+- Only target organizations you have written authorization to assess
+- Respect rate limits and robots.txt on all data sources
+- Never use collected data for malicious purposes
+- Follow responsible disclosure practices for any vulnerabilities discovered
+- Comply with all applicable laws and regulations (CFAA, GDPR, etc.)
+
+## Tech Stack
+
+Python 3.10+ | NetworkX | Shodan API | HIBP API | Hunter.io API | ReportLab | Chart.js | vis.js | BeautifulSoup
+
+## License
+
+MIT License - See LICENSE for details.
+
+## Author
+
+Elijah Bellamy - Cybersecurity Analyst

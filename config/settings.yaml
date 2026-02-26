@@ -1,0 +1,101 @@
+# ============================================================
+# OSINT Recon & Social Network Attack Surface Mapper
+# Configuration Settings
+# ============================================================
+# IMPORTANT: Never commit this file with real API keys!
+# Copy to settings.local.yaml and add your keys there.
+# ============================================================
+
+# Target Organization
+target:
+  name: "Example Corp"
+  domain: "example.com"
+  # Optional: known email patterns
+  email_patterns:
+    - "{first}.{last}@example.com"
+    - "{first}{last}@example.com"
+
+# API Keys (use environment variables or settings.local.yaml)
+api_keys:
+  github_token: ${GITHUB_TOKEN}
+  shodan_api_key: ${SHODAN_API_KEY}
+  hibp_api_key: ${HIBP_API_KEY}
+  hunter_api_key: ${HUNTER_API_KEY}  # Optional — free tier works without key
+
+# Collector Settings
+collectors:
+  github:
+    enabled: true
+    rate_limit_delay: 1.0  # seconds between requests
+    max_repos: 50
+    scan_commits: true
+
+  shodan:
+    enabled: true
+    rate_limit_delay: 1.0
+
+  hibp:
+    enabled: true
+    rate_limit_delay: 1.5  # HIBP requires slower rate
+
+  web_scraper:
+    enabled: true
+    respect_robots_txt: true
+    max_depth: 2
+    max_pages: 100
+    user_agent: "OSINT-Research-Bot/1.0 (Educational Purpose)"
+
+  hunter_io:
+    enabled: true
+    rate_limit_delay: 2.0  # Hunter.io free tier is limited
+
+  dns_ct:
+    enabled: true
+    max_subdomains: 500
+    resolve_dns: true      # Resolve A, MX, TXT, NS, CNAME, SOA
+    check_whois: true      # RDAP/WHOIS registration lookup
+    rate_limit_delay: 0.5  # crt.sh and Google DNS are generous
+
+# Graph Settings
+graph:
+  # Centrality weights for target scoring
+  centrality_weights:
+    degree: 0.2
+    betweenness: 0.3
+    closeness: 0.2
+    pagerank: 0.3
+
+  # Export settings
+  export_format: "gexf"  # gexf, graphml, json
+
+# Scoring Settings
+scoring:
+  category_weights:
+    breach: 0.30
+    social_media: 0.25
+    infrastructure: 0.25
+    metadata: 0.20
+
+  # Risk thresholds (0-10 scale)
+  thresholds:
+    critical: 8.0
+    high: 6.0
+    medium: 4.0
+    low: 2.0
+
+# Reporting Settings
+reporting:
+  output_dir: "data/exports"
+  formats:
+    - pdf
+    - html
+    - json
+  include_graph_visualization: true
+  include_attack_paths: true
+  max_attack_paths: 5
+
+# Logging
+logging:
+  level: "INFO"
+  file: "data/osint_recon.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

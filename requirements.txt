@@ -1,0 +1,38 @@
+# OSINT Recon & Social Network Attack Surface Mapper
+# Install: pip install -r requirements.txt
+
+# Core
+networkx>=3.2
+pyyaml>=6.0
+aiohttp>=3.9
+asyncio-throttle>=1.0
+
+# Data Collection
+beautifulsoup4>=4.12
+requests>=2.31
+shodan>=1.30
+lxml>=5.1
+
+# Graph & Visualization
+matplotlib>=3.8
+plotly>=5.18
+pyvis>=0.3
+scipy>=1.11     # Required for NetworkX PageRank
+
+# Reporting
+reportlab>=4.0
+jinja2>=3.1
+
+# Data Processing
+pandas>=2.1
+
+# CLI
+rich>=13.7       # Beautiful terminal output
+click>=8.1       # CLI framework (alternative to argparse)
+
+# Development
+pytest>=7.4
+pytest-asyncio>=0.23
+black>=24.0
+ruff>=0.2
+mypy>=1.8
