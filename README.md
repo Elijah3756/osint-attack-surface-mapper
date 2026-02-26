@@ -20,31 +20,21 @@ This tool automates the OSINT reconnaissance phase of a red team engagement:
 
 ## Architecture
 
-```
-CLI (main.py)
-  │
-  ├── Discovery Engine
-  │     ├── GitHub Collector (org members, commit emails, repos)
-  │     ├── Shodan Collector (infrastructure, open ports, CVEs)
-  │     ├── HIBP Collector (breach exposure checking)
-  │     └── Web Scraper (corporate sites, document metadata)
-  │
-  ├── Network Graph Builder (NetworkX)
-  │     ├── Centrality analysis (degree, betweenness, PageRank)
-  │     ├── Attack path computation
-  │     └── Gephi/pyvis export
-  │
-  ├── Exposure Scorer
-  │     ├── Breach exposure (30%)
-  │     ├── Social media footprint (25%)
-  │     ├── Infrastructure exposure (25%)
-  │     └── Metadata leakage (20%)
-  │
-  └── Report Generator
-        ├── PDF (executive red team report)
-        ├── HTML (interactive graph + findings)
-        └── JSON (machine-readable export)
-```
+<p align="center">
+  <img src="docs/diagrams/architecture.svg" alt="System Architecture" width="100%"/>
+</p>
+
+### Data Flow
+
+<p align="center">
+  <img src="docs/diagrams/data-flow.svg" alt="Data Flow Pipeline" width="100%"/>
+</p>
+
+### Attack Path Analysis
+
+<p align="center">
+  <img src="docs/diagrams/attack-path.svg" alt="Attack Path Analysis" width="100%"/>
+</p>
 
 ## Quick Start
 

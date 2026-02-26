@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 460" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="aR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#ef4444"/></marker>
+    <marker id="aO" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#f59e0b"/></marker>
+    <marker id="aP" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#8b5cf6"/></marker>
+    <marker id="aG" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#22c55e"/></marker>
+    <marker id="aB" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#4a9eed"/></marker>
+    <marker id="aD" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#555"/></marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="920" height="460" rx="12" fill="#13131f"/>
+
+  <!-- Title -->
+  <text x="460" y="34" text-anchor="middle" fill="#e5e5e5" font-size="22" font-weight="700">Attack Path Analysis</text>
+  <text x="460" y="52" text-anchor="middle" fill="#888" font-size="13">Social Engineering Kill Chain</text>
+
+  <!-- RECONNAISSANCE -->
+  <text x="30" y="80" fill="#ef4444" font-size="11" font-weight="700" letter-spacing="1">RECONNAISSANCE</text>
+  <rect x="20" y="88" width="260" height="160" rx="8" fill="#5c1a1a" fill-opacity="0.12" stroke="#ef4444" stroke-width="0.8" stroke-opacity="0.3"/>
+
+  <rect x="70" y="100" width="160" height="32" rx="5" fill="#5c1a1a" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="150" y="121" text-anchor="middle" fill="#e5e5e5" font-size="13" font-weight="600">Attacker</text>
+
+  <line x1="150" y1="132" x2="150" y2="148" stroke="#ef4444" stroke-width="1" marker-end="url(#aR)"/>
+
+  <rect x="36" y="152" width="80" height="26" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="76" y="170" text-anchor="middle" fill="#a5d8ff" font-size="10">GitHub</text>
+
+  <rect x="124" y="152" width="80" height="26" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="164" y="170" text-anchor="middle" fill="#a5d8ff" font-size="10">Hunter</text>
+
+  <rect x="36" y="184" width="80" height="26" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="76" y="202" text-anchor="middle" fill="#a5d8ff" font-size="10">Shodan</text>
+
+  <rect x="124" y="184" width="80" height="26" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="164" y="202" text-anchor="middle" fill="#a5d8ff" font-size="10">HIBP</text>
+
+  <text x="36" y="232" fill="#777" font-size="10">Discovers employees, emails,</text>
+  <text x="36" y="244" fill="#777" font-size="10">infrastructure exposure</text>
+
+  <!-- Arrow Recon -> Graph -->
+  <line x1="280" y1="168" x2="310" y2="168" stroke="#ef4444" stroke-width="2" marker-end="url(#aR)"/>
+
+  <!-- SOCIAL GRAPH -->
+  <text x="330" y="80" fill="#8b5cf6" font-size="11" font-weight="700" letter-spacing="1">SOCIAL GRAPH</text>
+  <rect x="310" y="88" width="260" height="160" rx="8" fill="#2d1b69" fill-opacity="0.12" stroke="#8b5cf6" stroke-width="0.8" stroke-opacity="0.3"/>
+
+  <!-- Network nodes -->
+  <ellipse cx="440" cy="118" rx="60" ry="18" fill="#5c1a1a" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="440" y="123" text-anchor="middle" fill="#e5e5e5" font-size="11" font-weight="600">CTO  (0.92)</text>
+
+  <ellipse cx="400" cy="164" rx="55" ry="16" fill="#5c3d1a" stroke="#f59e0b" stroke-width="1"/>
+  <text x="400" y="169" text-anchor="middle" fill="#e5e5e5" font-size="10">Dev Lead (0.71)</text>
+
+  <ellipse cx="490" cy="164" rx="50" ry="16" fill="#1a4d2e" stroke="#22c55e" stroke-width="1"/>
+  <text x="490" y="169" text-anchor="middle" fill="#e5e5e5" font-size="10">SRE (0.45)</text>
+
+  <ellipse cx="440" cy="206" rx="50" ry="16" fill="#1a4d2e" stroke="#22c55e" stroke-width="1"/>
+  <text x="440" y="211" text-anchor="middle" fill="#e5e5e5" font-size="10">Jr Dev (0.28)</text>
+
+  <!-- Graph edges -->
+  <line x1="425" y1="136" x2="405" y2="148" stroke="#555" stroke-width="1"/>
+  <line x1="455" y1="136" x2="480" y2="148" stroke="#555" stroke-width="1"/>
+  <line x1="415" y1="180" x2="430" y2="190" stroke="#555" stroke-width="1"/>
+  <line x1="475" y1="180" x2="455" y2="190" stroke="#555" stroke-width="1"/>
+
+  <text x="330" y="240" fill="#777" font-size="10">Centrality + PageRank scoring</text>
+
+  <!-- Arrow Graph -> Findings -->
+  <line x1="570" y1="168" x2="600" y2="168" stroke="#8b5cf6" stroke-width="2" marker-end="url(#aP)"/>
+
+  <!-- EXPOSURE FINDINGS -->
+  <text x="620" y="80" fill="#f59e0b" font-size="11" font-weight="700" letter-spacing="1">EXPOSURE FINDINGS</text>
+  <rect x="600" y="88" width="300" height="160" rx="8" fill="#5c3d1a" fill-opacity="0.12" stroke="#f59e0b" stroke-width="0.8" stroke-opacity="0.3"/>
+
+  <rect x="616" y="104" width="268" height="26" rx="4" fill="#5c1a1a" stroke="#ef4444" stroke-width="0.8"/>
+  <text x="750" y="122" text-anchor="middle" fill="#ffc9c9" font-size="11">CTO found in 3 data breaches</text>
+
+  <rect x="616" y="138" width="268" height="26" rx="4" fill="#5c3d1a" stroke="#f59e0b" stroke-width="0.8"/>
+  <text x="750" y="156" text-anchor="middle" fill="#ffd8a8" font-size="11">Password reuse likely detected</text>
+
+  <rect x="616" y="172" width="268" height="26" rx="4" fill="#2d1b69" stroke="#8b5cf6" stroke-width="0.8"/>
+  <text x="750" y="190" text-anchor="middle" fill="#d0bfff" font-size="11">RDP open on port 3389</text>
+
+  <rect x="616" y="206" width="268" height="26" rx="4" fill="#1a4d2e" stroke="#22c55e" stroke-width="0.8"/>
+  <text x="750" y="224" text-anchor="middle" fill="#b2f2bb" font-size="11">Corporate email pattern exposed</text>
+
+  <!-- ATTACK CHAIN -->
+  <text x="340" y="280" fill="#ef4444" font-size="13" font-weight="700" letter-spacing="1">ATTACK CHAIN</text>
+  <rect x="20" y="292" width="880" height="85" rx="8" fill="#5c1a1a" fill-opacity="0.08" stroke="#ef4444" stroke-width="0.8" stroke-opacity="0.2"/>
+
+  <rect x="36" y="304" width="185" height="58" rx="6" fill="#5c1a1a" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="128" y="326" text-anchor="middle" fill="#e5e5e5" font-size="12" font-weight="600">1. Spearphish CTO</text>
+  <text x="128" y="342" text-anchor="middle" fill="#999" font-size="10">(highest centrality)</text>
+
+  <line x1="221" y1="333" x2="250" y2="333" stroke="#ef4444" stroke-width="2" marker-end="url(#aR)"/>
+
+  <rect x="255" y="304" width="185" height="58" rx="6" fill="#5c3d1a" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="347" y="326" text-anchor="middle" fill="#e5e5e5" font-size="12" font-weight="600">2. Credential Harvest</text>
+  <text x="347" y="342" text-anchor="middle" fill="#999" font-size="10">(breach + pwd reuse)</text>
+
+  <line x1="440" y1="333" x2="469" y2="333" stroke="#f59e0b" stroke-width="2" marker-end="url(#aO)"/>
+
+  <rect x="474" y="304" width="185" height="58" rx="6" fill="#2d1b69" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="566" y="326" text-anchor="middle" fill="#e5e5e5" font-size="12" font-weight="600">3. Pivot via RDP</text>
+  <text x="566" y="342" text-anchor="middle" fill="#999" font-size="10">(open port 3389)</text>
+
+  <line x1="659" y1="333" x2="688" y2="333" stroke="#8b5cf6" stroke-width="2" marker-end="url(#aP)"/>
+
+  <rect x="693" y="304" width="190" height="58" rx="6" fill="#1a4d2e" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="788" y="330" text-anchor="middle" fill="#e5e5e5" font-size="12" font-weight="700">4. Internal Access</text>
+  <text x="788" y="346" text-anchor="middle" fill="#999" font-size="10">Network compromised</text>
+
+  <!-- Legend -->
+  <text x="36" y="410" fill="#888" font-size="11">Risk Level:</text>
+  <rect x="110" y="398" width="70" height="20" rx="3" fill="#5c1a1a" stroke="#ef4444" stroke-width="0.8"/>
+  <text x="145" y="412" text-anchor="middle" fill="#ffc9c9" font-size="10">Critical</text>
+  <rect x="190" y="398" width="55" height="20" rx="3" fill="#5c3d1a" stroke="#f59e0b" stroke-width="0.8"/>
+  <text x="217" y="412" text-anchor="middle" fill="#ffd8a8" font-size="10">High</text>
+  <rect x="255" y="398" width="70" height="20" rx="3" fill="#2d1b69" stroke="#8b5cf6" stroke-width="0.8"/>
+  <text x="290" y="412" text-anchor="middle" fill="#d0bfff" font-size="10">Medium</text>
+  <rect x="335" y="398" width="50" height="20" rx="3" fill="#1a4d2e" stroke="#22c55e" stroke-width="0.8"/>
+  <text x="360" y="412" text-anchor="middle" fill="#b2f2bb" font-size="10">Low</text>
+
+  <text x="410" y="412" fill="#777" font-size="10">(0.00 - 1.00) = Weighted Exposure Score</text>
+</svg>

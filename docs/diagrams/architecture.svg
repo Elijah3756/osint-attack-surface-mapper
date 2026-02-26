@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 480" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="920" height="480" rx="12" fill="#13131f"/>
+
+  <!-- Title -->
+  <text x="460" y="36" text-anchor="middle" fill="#e5e5e5" font-size="22" font-weight="700">System Architecture</text>
+  <text x="460" y="56" text-anchor="middle" fill="#888" font-size="13">OSINT Attack Surface Mapper</text>
+
+  <!-- CLI Bar -->
+  <rect x="300" y="68" width="320" height="32" rx="6" fill="#1e3a5f" stroke="#4a9eed" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="460" y="89" text-anchor="middle" fill="#a5d8ff" font-size="13" font-weight="600">main.py  —  CLI Pipeline</text>
+
+  <!-- COLLECTORS column -->
+  <text x="40" y="122" fill="#4a9eed" font-size="12" font-weight="700" letter-spacing="1">COLLECTORS</text>
+  <rect x="24" y="130" width="186" height="248" rx="8" fill="#1e3a5f" fill-opacity="0.15" stroke="#4a9eed" stroke-width="0.8" stroke-opacity="0.4"/>
+
+  <rect x="38" y="144" width="158" height="28" rx="5" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="117" y="163" text-anchor="middle" fill="#a5d8ff" font-size="12">GitHub Collector</text>
+
+  <rect x="38" y="180" width="158" height="28" rx="5" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="117" y="199" text-anchor="middle" fill="#a5d8ff" font-size="12">Shodan Collector</text>
+
+  <rect x="38" y="216" width="158" height="28" rx="5" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="117" y="235" text-anchor="middle" fill="#a5d8ff" font-size="12">HIBP Collector</text>
+
+  <rect x="38" y="252" width="158" height="28" rx="5" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="117" y="271" text-anchor="middle" fill="#a5d8ff" font-size="12">Hunter.io Collector</text>
+
+  <rect x="38" y="288" width="158" height="28" rx="5" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="117" y="307" text-anchor="middle" fill="#a5d8ff" font-size="12">DNS / CT Collector</text>
+
+  <rect x="38" y="324" width="158" height="28" rx="5" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="117" y="343" text-anchor="middle" fill="#a5d8ff" font-size="12">Web Scraper</text>
+
+  <!-- Arrow: Collectors -> Processing -->
+  <line x1="210" y1="254" x2="250" y2="254" stroke="#4a9eed" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <defs><marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#4a9eed"/></marker></defs>
+
+  <!-- PROCESSING column -->
+  <text x="276" y="122" fill="#8b5cf6" font-size="12" font-weight="700" letter-spacing="1">PROCESSING</text>
+  <rect x="254" y="130" width="186" height="248" rx="8" fill="#2d1b69" fill-opacity="0.15" stroke="#8b5cf6" stroke-width="0.8" stroke-opacity="0.4"/>
+
+  <rect x="268" y="152" width="158" height="34" rx="5" fill="#2d1b69" stroke="#8b5cf6" stroke-width="0.8"/>
+  <text x="347" y="174" text-anchor="middle" fill="#d0bfff" font-size="12">Deduplication</text>
+
+  <line x1="347" y1="186" x2="347" y2="204" stroke="#555" stroke-width="1"/>
+  <path d="M343,200 L347,208 L351,200" fill="#555"/>
+
+  <rect x="268" y="208" width="158" height="34" rx="5" fill="#2d1b69" stroke="#8b5cf6" stroke-width="0.8"/>
+  <text x="347" y="230" text-anchor="middle" fill="#d0bfff" font-size="12">Graph Builder</text>
+
+  <line x1="347" y1="242" x2="347" y2="260" stroke="#555" stroke-width="1"/>
+  <path d="M343,256 L347,264 L351,256" fill="#555"/>
+
+  <rect x="268" y="264" width="158" height="34" rx="5" fill="#2d1b69" stroke="#8b5cf6" stroke-width="0.8"/>
+  <text x="347" y="286" text-anchor="middle" fill="#d0bfff" font-size="12">Exposure Scorer</text>
+
+  <text x="272" y="320" fill="#777" font-size="10">NetworkX + Weighted</text>
+  <text x="272" y="334" fill="#777" font-size="10">Risk Model</text>
+
+  <!-- Arrow: Processing -> Analysis -->
+  <line x1="440" y1="254" x2="480" y2="254" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <defs><marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#8b5cf6"/></marker></defs>
+
+  <!-- ANALYSIS column -->
+  <text x="506" y="122" fill="#22c55e" font-size="12" font-weight="700" letter-spacing="1">ANALYSIS</text>
+  <rect x="484" y="130" width="186" height="248" rx="8" fill="#1a4d2e" fill-opacity="0.15" stroke="#22c55e" stroke-width="0.8" stroke-opacity="0.4"/>
+
+  <rect x="498" y="152" width="158" height="34" rx="5" fill="#1a4d2e" stroke="#22c55e" stroke-width="0.8"/>
+  <text x="577" y="174" text-anchor="middle" fill="#b2f2bb" font-size="12">Centrality Metrics</text>
+
+  <rect x="498" y="208" width="158" height="34" rx="5" fill="#1a4d2e" stroke="#22c55e" stroke-width="0.8"/>
+  <text x="577" y="230" text-anchor="middle" fill="#b2f2bb" font-size="12">HVT Detection</text>
+
+  <rect x="498" y="264" width="158" height="34" rx="5" fill="#1a4d2e" stroke="#22c55e" stroke-width="0.8"/>
+  <text x="577" y="286" text-anchor="middle" fill="#b2f2bb" font-size="12">Attack Paths</text>
+
+  <text x="502" y="320" fill="#777" font-size="10">PageRank + Betweenness</text>
+  <text x="502" y="334" fill="#777" font-size="10">+ Shortest Paths</text>
+
+  <!-- Arrow: Analysis -> Reports -->
+  <line x1="577" y1="378" x2="577" y2="404" stroke="#22c55e" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <defs><marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#22c55e"/></marker></defs>
+
+  <!-- REPORTS row -->
+  <text x="506" y="400" fill="#f59e0b" font-size="12" font-weight="700" letter-spacing="1">REPORTS</text>
+  <rect x="254" y="410" width="640" height="46" rx="8" fill="#5c3d1a" fill-opacity="0.15" stroke="#f59e0b" stroke-width="0.8" stroke-opacity="0.4"/>
+
+  <rect x="272" y="418" width="180" height="30" rx="5" fill="#5c3d1a" stroke="#f59e0b" stroke-width="0.8"/>
+  <text x="362" y="438" text-anchor="middle" fill="#ffd8a8" font-size="12">PDF Report</text>
+
+  <rect x="470" y="418" width="200" height="30" rx="5" fill="#5c3d1a" stroke="#f59e0b" stroke-width="0.8"/>
+  <text x="570" y="438" text-anchor="middle" fill="#ffd8a8" font-size="12">HTML Dashboard</text>
+
+  <rect x="690" y="418" width="180" height="30" rx="5" fill="#5c3d1a" stroke="#f59e0b" stroke-width="0.8"/>
+  <text x="780" y="438" text-anchor="middle" fill="#ffd8a8" font-size="12">JSON Export</text>
+
+  <!-- CI Badge -->
+  <rect x="38" y="418" width="158" height="30" rx="5" fill="#1a4d2e" stroke="#22c55e" stroke-width="0.8"/>
+  <text x="117" y="438" text-anchor="middle" fill="#b2f2bb" font-size="11" font-weight="600">CI: 164 Tests Passing</text>
+</svg>

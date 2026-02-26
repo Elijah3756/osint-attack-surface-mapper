@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="aB" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#4a9eed"/></marker>
+    <marker id="aP" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#8b5cf6"/></marker>
+    <marker id="aG" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#22c55e"/></marker>
+    <marker id="aO" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#f59e0b"/></marker>
+    <marker id="aD" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#555"/></marker>
+    <marker id="aR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#ef4444"/></marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="920" height="440" rx="12" fill="#13131f"/>
+
+  <!-- Title -->
+  <text x="460" y="34" text-anchor="middle" fill="#e5e5e5" font-size="22" font-weight="700">Data Flow Pipeline</text>
+  <text x="460" y="52" text-anchor="middle" fill="#888" font-size="13">Source to Report</text>
+
+  <!-- SOURCES -->
+  <text x="30" y="80" fill="#4a9eed" font-size="11" font-weight="700" letter-spacing="1">SOURCES</text>
+
+  <rect x="20" y="90" width="140" height="26" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="90" y="108" text-anchor="middle" fill="#a5d8ff" font-size="11">GitHub API</text>
+
+  <rect x="20" y="122" width="140" height="26" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="90" y="140" text-anchor="middle" fill="#a5d8ff" font-size="11">Shodan API</text>
+
+  <rect x="20" y="154" width="140" height="26" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="90" y="172" text-anchor="middle" fill="#a5d8ff" font-size="11">HIBP API</text>
+
+  <rect x="20" y="186" width="140" height="26" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="90" y="204" text-anchor="middle" fill="#a5d8ff" font-size="11">Hunter.io API</text>
+
+  <rect x="20" y="218" width="140" height="26" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="90" y="236" text-anchor="middle" fill="#a5d8ff" font-size="11">DNS / CT Logs</text>
+
+  <rect x="20" y="250" width="140" height="26" rx="4" fill="#1e3a5f" stroke="#4a9eed" stroke-width="0.8"/>
+  <text x="90" y="268" text-anchor="middle" fill="#a5d8ff" font-size="11">Corporate Sites</text>
+
+  <!-- Arrow Sources -> Ingest -->
+  <line x1="160" y1="180" x2="195" y2="180" stroke="#4a9eed" stroke-width="2" marker-end="url(#aB)"/>
+
+  <!-- INGEST -->
+  <text x="210" y="80" fill="#8b5cf6" font-size="11" font-weight="700" letter-spacing="1">INGEST</text>
+
+  <rect x="200" y="100" width="150" height="40" rx="5" fill="#2d1b69" stroke="#8b5cf6" stroke-width="0.8"/>
+  <text x="275" y="118" text-anchor="middle" fill="#d0bfff" font-size="11">Async Collectors</text>
+  <text x="275" y="132" text-anchor="middle" fill="#999" font-size="9">(rate-limited)</text>
+
+  <line x1="275" y1="140" x2="275" y2="154" stroke="#555" stroke-width="1" marker-end="url(#aD)"/>
+
+  <rect x="200" y="158" width="150" height="30" rx="5" fill="#2d1b69" stroke="#8b5cf6" stroke-width="0.8"/>
+  <text x="275" y="178" text-anchor="middle" fill="#d0bfff" font-size="11">Deduplication</text>
+
+  <line x1="275" y1="188" x2="275" y2="202" stroke="#555" stroke-width="1" marker-end="url(#aD)"/>
+
+  <rect x="200" y="206" width="150" height="30" rx="5" fill="#2d1b69" stroke="#8b5cf6" stroke-width="0.8"/>
+  <text x="275" y="226" text-anchor="middle" fill="#d0bfff" font-size="11">Normalization</text>
+
+  <!-- Arrow Ingest -> Process -->
+  <line x1="350" y1="180" x2="395" y2="180" stroke="#8b5cf6" stroke-width="2" marker-end="url(#aP)"/>
+
+  <!-- PROCESS -->
+  <text x="410" y="80" fill="#22c55e" font-size="11" font-weight="700" letter-spacing="1">PROCESS</text>
+
+  <rect x="400" y="100" width="150" height="36" rx="5" fill="#1a4d2e" stroke="#22c55e" stroke-width="0.8"/>
+  <text x="475" y="123" text-anchor="middle" fill="#b2f2bb" font-size="11">Graph Builder</text>
+  <text x="475" y="150" text-anchor="middle" fill="#777" font-size="9">NetworkX nodes + edges</text>
+
+  <line x1="475" y1="156" x2="475" y2="170" stroke="#555" stroke-width="1" marker-end="url(#aD)"/>
+
+  <rect x="400" y="174" width="150" height="36" rx="5" fill="#5c1a1a" stroke="#ef4444" stroke-width="0.8"/>
+  <text x="475" y="197" text-anchor="middle" fill="#ffc9c9" font-size="11">Exposure Scorer</text>
+  <text x="475" y="224" text-anchor="middle" fill="#777" font-size="9">Breach 30% | Social 25%</text>
+  <text x="475" y="236" text-anchor="middle" fill="#777" font-size="9">Infra 25% | Meta 20%</text>
+
+  <line x1="475" y1="242" x2="475" y2="256" stroke="#555" stroke-width="1" marker-end="url(#aD)"/>
+
+  <rect x="400" y="260" width="150" height="36" rx="5" fill="#1a4d2e" stroke="#22c55e" stroke-width="0.8"/>
+  <text x="475" y="283" text-anchor="middle" fill="#b2f2bb" font-size="11">Centrality Analysis</text>
+
+  <!-- Arrow Process -> Analyze -->
+  <line x1="550" y1="180" x2="595" y2="180" stroke="#22c55e" stroke-width="2" marker-end="url(#aG)"/>
+
+  <!-- ANALYZE -->
+  <text x="610" y="80" fill="#f59e0b" font-size="11" font-weight="700" letter-spacing="1">ANALYZE</text>
+
+  <rect x="600" y="100" width="155" height="30" rx="5" fill="#5c3d1a" stroke="#f59e0b" stroke-width="0.8"/>
+  <text x="677" y="120" text-anchor="middle" fill="#ffd8a8" font-size="11">HVT Detection</text>
+
+  <rect x="600" y="144" width="155" height="30" rx="5" fill="#5c3d1a" stroke="#f59e0b" stroke-width="0.8"/>
+  <text x="677" y="164" text-anchor="middle" fill="#ffd8a8" font-size="11">Attack Path Mapping</text>
+
+  <rect x="600" y="188" width="155" height="30" rx="5" fill="#5c3d1a" stroke="#f59e0b" stroke-width="0.8"/>
+  <text x="677" y="208" text-anchor="middle" fill="#ffd8a8" font-size="11">Risk Ranking</text>
+
+  <!-- Arrow Analyze -> Output -->
+  <line x1="677" y1="218" x2="677" y2="306" stroke="#f59e0b" stroke-width="2" marker-end="url(#aO)"/>
+
+  <!-- OUTPUT -->
+  <text x="410" y="318" fill="#ef4444" font-size="11" font-weight="700" letter-spacing="1">OUTPUT</text>
+  <rect x="400" y="328" width="490" height="42" rx="8" fill="#5c1a1a" fill-opacity="0.15" stroke="#ef4444" stroke-width="0.8" stroke-opacity="0.4"/>
+
+  <rect x="415" y="336" width="140" height="26" rx="4" fill="#5c1a1a" stroke="#ef4444" stroke-width="0.8"/>
+  <text x="485" y="354" text-anchor="middle" fill="#ffc9c9" font-size="12" font-weight="600">PDF</text>
+
+  <rect x="570" y="336" width="140" height="26" rx="4" fill="#5c1a1a" stroke="#ef4444" stroke-width="0.8"/>
+  <text x="640" y="354" text-anchor="middle" fill="#ffc9c9" font-size="12" font-weight="600">HTML</text>
+
+  <rect x="725" y="336" width="140" height="26" rx="4" fill="#5c1a1a" stroke="#ef4444" stroke-width="0.8"/>
+  <text x="795" y="354" text-anchor="middle" fill="#ffc9c9" font-size="12" font-weight="600">JSON</text>
+</svg>
